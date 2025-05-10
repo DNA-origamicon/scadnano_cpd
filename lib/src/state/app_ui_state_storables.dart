@@ -135,6 +135,11 @@ abstract class AppUIStateStorables
 
   bool get ox_export_only_selected_strands;
 
+  // CPD sites continuous display
+  bool get show_cpd_sites_continuously;
+
+  bool get show_all_t_bases;
+
   static void _initializeBuilder(AppUIStateStorablesBuilder b) {
     // This ensures that even if these keys are not in localStorage (e.g., due to upgrading),
     // then they will be populated with a default value instead of raising an exception.
@@ -196,6 +201,8 @@ abstract class AppUIStateStorables
     b.selection_box_intersection = false;
     b.export_svg_text_separately = false;
     b.ox_export_only_selected_strands = false;
+    b.show_cpd_sites_continuously = false;
+    b.show_all_t_bases = false;
   }
 
   /************************ begin BuiltValue boilerplate ************************/

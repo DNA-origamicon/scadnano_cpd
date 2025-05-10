@@ -7,6 +7,7 @@ import 'package:built_value/built_value.dart';
 import 'package:scadnano/src/state/design_side_rotation_data.dart';
 import 'package:scadnano/src/state/modification.dart';
 import 'package:scadnano/src/state/copy_info.dart';
+import 'package:scadnano/src/state/t_base_location.dart';
 import 'package:tuple/tuple.dart';
 import '../actions/actions.dart' as actions;
 import '../state/local_storage_design_choice.dart';
@@ -30,6 +31,7 @@ import 'substrand.dart';
 import 'strand_creation.dart';
 import 'strands_move.dart';
 import 'selection_rope.dart';
+import 'cpd_site.dart';
 
 part 'app_ui_state.g.dart';
 
@@ -65,13 +67,13 @@ abstract class AppUIState with BuiltJsonSerializable implements Built<AppUIState
 
   SelectionRope? get selection_rope;
 
-  // last 5' modification that was added (for populating new add modification dialogs)
+  // last 5' modification (for populating new add modification dialogs)
   Modification5Prime? get last_mod_5p;
 
-  // last 3' modification that was added (for populating new add modification dialogs)
+  // last 3' modification (for populating new add modification dialogs)
   Modification3Prime? get last_mod_3p;
 
-  // last internal modification that was added (for populating new add modification dialogs)
+  // last internal modification (for populating new add modification dialogs)
   ModificationInternal? get last_mod_int;
 
   BuiltList<MouseoverData> get mouseover_datas;
@@ -132,6 +134,11 @@ abstract class AppUIState with BuiltJsonSerializable implements Built<AppUIState
   bool get display_major_tick_widths_all_helices => storables.display_major_tick_widths_all_helices;
 
   AppUIStateStorables get storables;
+
+  /// Stores locations of T-bases found during scanning
+  TBaseLocations get t_base_locations;
+
+  BuiltList<CPDSite> get cpd_sites;
 
   /*********** below getters delegate to storables ********************/
 
@@ -244,6 +251,10 @@ abstract class AppUIState with BuiltJsonSerializable implements Built<AppUIState
 
   bool get ox_export_only_selected_strands => storables.ox_export_only_selected_strands;
 
+  // CPD sites continuous display
+  bool get show_cpd_sites_continuously => storables.show_cpd_sites_continuously;
+  bool get show_all_t_bases => storables.show_all_t_bases;
+
   static void _initializeBuilder(AppUIStateBuilder b) {
     b.copy_info = null;
     b.last_mod_5p = null;
@@ -275,7 +286,9 @@ abstract class AppUIState with BuiltJsonSerializable implements Built<AppUIState
     b.dna_sequence_png_vertical_offset = 0;
     b.export_svg_action_delayed_for_png_cache = null;
     b.is_zoom_above_threshold = false;
+    b.t_base_locations = TBaseLocations((b) => b..t_bases = ListBuilder<TBaseLocation>()).toBuilder();
     b.storables.replace(DEFAULT_AppUIStateStorable);
+    b.cpd_sites.replace(BuiltList<CPDSite>());
   }
 
   /************************ begin BuiltValue boilerplate ************************/
