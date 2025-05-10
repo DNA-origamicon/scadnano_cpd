@@ -24,6 +24,8 @@ import '../state/app_ui_state_storables.dart';
 import '../state/mouseover_data.dart';
 import '../reducers/select_mode_state_reducer.dart';
 import '../reducers/edit_modes_reducer.dart';
+import '../reducers/t_bases_reducer.dart';
+import '../state/cpd_site.dart';
 import '../actions/actions.dart' as actions;
 import 'dialog_reducer.dart';
 import 'domains_move_reducer.dart';
@@ -115,7 +117,9 @@ AppUIState ui_state_local_reducer(AppUIState ui_state, action) => ui_state.rebui
               ui_state.export_svg_action_delayed_for_png_cache,
               action,
             )?.toBuilder()
-        ..is_zoom_above_threshold = is_zoom_above_threshold_reducer(ui_state.is_zoom_above_threshold, action),
+        ..is_zoom_above_threshold = is_zoom_above_threshold_reducer(ui_state.is_zoom_above_threshold, action)
+        ..cpd_sites.replace(cpd_sites_reducer(ui_state.cpd_sites, action))
+        ..t_base_locations = t_bases_reducer(ui_state.t_base_locations, action).toBuilder(),
 );
 
 bool helix_change_apply_to_all_reducer(bool helix_change_apply_to_all, action) {
@@ -326,7 +330,7 @@ bool default_crossover_type_staple_for_setting_helix_rolls_reducer(
 DNAAssignOptions dna_assign_options_reducer(DNAAssignOptions _, actions.AssignDNA action) =>
     action.dna_assign_options;
 
-Reducer<bool> show_mousever_rect_reducer = combineReducers([
+Reducer<bool> show_mouseover_rect_reducer = combineReducers([
   TypedReducer<bool, actions.ShowMouseoverRectSet>(show_mouseover_rect_set_reducer),
   TypedReducer<bool, actions.ShowMouseoverRectToggle>(show_mouseover_rect_toggle_reducer),
 ]);
@@ -668,7 +672,13 @@ AppUIStateStorables app_ui_state_storable_local_reducer(AppUIStateStorables stor
           )(storables.show_mouseover_data, action)
           ..selection_box_intersection = TypedReducer<bool, actions.SelectionBoxIntersectionRuleSet>(
             selection_box_intersection_reducer,
-          )(storables.selection_box_intersection, action),
+          )(storables.selection_box_intersection, action)
+          ..show_cpd_sites_continuously =
+              TypedReducer<bool, actions.ShowCPDSitesContinuouslySet>(show_cpd_sites_continuously_reducer)(
+                  storables.show_cpd_sites_continuously, action)
+          ..show_all_t_bases =
+              TypedReducer<bool, actions.ShowAllTBasesSet>(show_all_t_bases_reducer)(
+                  storables.show_all_t_bases, action),
   );
 }
 
@@ -820,7 +830,8 @@ AppUIState ui_state_global_reducer(AppUIState ui_state, AppState state, action) 
             strand_creation_global_reducer(ui_state.strand_creation, state, action)?.toBuilder()
         ..copy_info = copy_info_global_reducer(ui_state.copy_info, state, action)?.toBuilder()
         ..original_helix_offsets =
-            original_helix_offsets_reducer(ui_state.original_helix_offsets, state, action).toBuilder(),
+            original_helix_offsets_reducer(ui_state.original_helix_offsets, state, action).toBuilder()
+        ..cpd_sites.replace(ui_state.cpd_sites),
 );
 
 BuiltMap<int, BuiltList<int>> original_helix_offsets_reducer(
@@ -856,3 +867,38 @@ GlobalReducer<BuiltList<MouseoverData>, AppState> mouseover_datas_global_reducer
 
 bool selection_box_intersection_reducer(bool _, actions.SelectionBoxIntersectionRuleSet action) =>
     action.intersect;
+
+BuiltList<CPDSite> cpd_sites_reducer(BuiltList<CPDSite> cpd_sites, action) {
+  if (action is actions.CPDDetectionResult) {
+    return action.cpd_sites;
+  } else if (action is actions.ShowCPDSitesContinuouslySet && !action.show) {
+    // Clear when CPD sites are explicitly turned off
+    return BuiltList<CPDSite>();
+  } else if (action is actions.ShowDNASet && !action.show) {
+    // Clear when DNA sequences are turned off (required for CPD sites)
+    return BuiltList<CPDSite>();
+  } else if (
+      // Clear sites if underlying data changes
+      // Note: DetectCPDSites action trigger no longer clears; the result action (CPDDetectionResult) sets the state.
+      action is actions.AssignDNA ||
+          action is actions.RemoveDNA ||
+          action is actions.ConvertCrossoverToLoopout ||
+          action is actions.InsertionAdd ||
+          action is actions.InsertionRemove ||
+          action is actions.InsertionLengthChange ||
+          action is actions.DeletionAdd ||
+          action is actions.DeletionRemove ||
+          action is actions.DNAEndsMoveCommit ||
+          action is actions.DNAExtensionsMoveCommit ||
+          action is actions.LoadDNAFile ||
+          action is actions.DeleteAllSelected ||
+          action is actions.ExtensionDisplayLengthAngleSet) {
+    return BuiltList<CPDSite>();
+  } else {
+    return cpd_sites;
+  }
+}
+
+bool show_cpd_sites_continuously_reducer(bool _, actions.ShowCPDSitesContinuouslySet action) => action.show;
+
+bool show_all_t_bases_reducer(bool _, actions.ShowAllTBasesSet action) => action.show;

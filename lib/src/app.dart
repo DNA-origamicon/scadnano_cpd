@@ -101,6 +101,9 @@ class App {
       copy_selected_strands_to_clipboard_image_keyboard_listeners();
       // print("6");
       restore_all_local_storage(app.store);
+      // Reset CPD toggles to ensure they start OFF, overriding any stored value
+      app.dispatch(actions.ShowCPDSitesContinuouslySet.set(false));
+      app.dispatch(actions.ShowAllTBasesSet.set(false));
       // print("7");
       setup_warning_before_unload();
       // print("8");

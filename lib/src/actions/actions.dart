@@ -51,6 +51,9 @@ import '../state/grid_position.dart';
 import '../state/mouseover_data.dart';
 import '../middleware/local_storage.dart';
 
+import '../state/t_base_location.dart';
+import '../state/cpd_site.dart';
+
 part 'actions.g.dart';
 
 /// [Action]s don't have to implement BuiltValue, but if they do, and they use the serialization mechanism,
@@ -92,6 +95,70 @@ abstract class SkipUndo with BuiltJsonSerializable implements Action, Built<Skip
   SkipUndo._();
 
   static Serializer<SkipUndo> get serializer => _$skipUndoSerializer;
+}
+
+// T-base/CPD actions:
+abstract class DetectCPDSites
+    with BuiltJsonSerializable
+    implements Action, Built<DetectCPDSites, DetectCPDSitesBuilder> {
+  /************************ begin BuiltValue boilerplate ************************/
+  factory DetectCPDSites([void Function(DetectCPDSitesBuilder) updates]) = _$DetectCPDSites;
+
+  DetectCPDSites._();
+
+  static Serializer<DetectCPDSites> get serializer => _$detectCPDSitesSerializer;
+}
+
+/// Action dispatched after T-base scanning and CPD site pairing are complete.
+abstract class CPDDetectionResult
+    with BuiltJsonSerializable
+    implements Action, Built<CPDDetectionResult, CPDDetectionResultBuilder> {
+  /// The locations of all T-bases found in the design.
+  TBaseLocations get t_base_locations;
+
+  /// The calculated CPD sites based on the found T-bases.
+  BuiltList<CPDSite> get cpd_sites;
+
+  /************************ begin BuiltValue boilerplate ************************/
+  factory CPDDetectionResult([void Function(CPDDetectionResultBuilder) updates]) = _$CPDDetectionResult;
+
+  CPDDetectionResult._();
+
+  static Serializer<CPDDetectionResult> get serializer => _$cPDDetectionResultSerializer;
+}
+
+// For showing/hiding CPD sites continuously
+abstract class ShowCPDSitesContinuouslySet
+    with BuiltJsonSerializable
+    implements Action, Built<ShowCPDSitesContinuouslySet, ShowCPDSitesContinuouslySetBuilder> {
+  bool get show;
+
+  /************************ begin BuiltValue boilerplate ************************/
+  factory ShowCPDSitesContinuouslySet([void Function(ShowCPDSitesContinuouslySetBuilder) updates]) = 
+      _$ShowCPDSitesContinuouslySet;
+
+  factory ShowCPDSitesContinuouslySet.set(bool show_value) => 
+      ShowCPDSitesContinuouslySet((b) => b.show = show_value);
+
+  ShowCPDSitesContinuouslySet._();
+  static Serializer<ShowCPDSitesContinuouslySet> get serializer => _$showCPDSitesContinuouslySetSerializer;
+}
+
+// For showing/hiding all T bases
+abstract class ShowAllTBasesSet
+    with BuiltJsonSerializable
+    implements Action, Built<ShowAllTBasesSet, ShowAllTBasesSetBuilder> {
+  bool get show;
+
+  /************************ begin BuiltValue boilerplate ************************/
+  factory ShowAllTBasesSet([void Function(ShowAllTBasesSetBuilder) updates]) = 
+      _$ShowAllTBasesSet;
+
+  factory ShowAllTBasesSet.set(bool show_value) => 
+      ShowAllTBasesSet((b) => b.show = show_value);
+
+  ShowAllTBasesSet._();
+  static Serializer<ShowAllTBasesSet> get serializer => _$showAllTBasesSetSerializer;
 }
 
 /// [Action] that should trigger storing of certain [Storable]s to localStorage.
@@ -1503,7 +1570,7 @@ abstract class GeometryHelixGroupSet
 // Selectables
 
 // If intersect is true, then any object intersecting the selection box is selected.
-// If intersect is false, then any object contained in the selectin box is selected.
+// If intersect is false, then any object contained in the selection box is selected.
 abstract class SelectionBoxIntersectionRuleSet
     with BuiltJsonSerializable
     implements Action, Built<SelectionBoxIntersectionRuleSet, SelectionBoxIntersectionRuleSetBuilder> {
@@ -2608,7 +2675,7 @@ abstract class MoveLinker
     } else if (l is Loopout) {
       linker_description = "loopout";
     } else {
-      throw AssertionError("${potential_crossover.linker} is not crossover nor looput");
+      throw AssertionError("${potential_crossover.linker} is not crossover nor loopout");
     }
 
     return "move ${linker_description}";

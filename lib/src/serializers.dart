@@ -9,6 +9,7 @@ import 'package:scadnano/src/dna_file_type.dart';
 import 'package:scadnano/src/state/base_pair_display_type.dart';
 import 'package:scadnano/src/state/dna_extensions_move.dart';
 import 'package:scadnano/src/state/undo_redo.dart';
+import 'package:scadnano/src/state/t_base_location.dart';
 import 'package:tuple/tuple.dart';
 
 import 'state/dna_assign_options.dart';
@@ -58,6 +59,7 @@ import 'state/strand.dart';
 import 'state/crossover.dart';
 import 'state/design_side_rotation_data.dart';
 import 'state/domain_name_mismatch.dart';
+import 'state/cpd_site.dart';
 
 part 'serializers.g.dart';
 
@@ -126,6 +128,8 @@ part 'serializers.g.dart';
   ShowMismatchesSet,
   OxviewShowSet,
   ExportSvgTextSeparatelySet,
+  ShowCPDSitesContinuouslySet,
+  ShowAllTBasesSet,
   SaveDNAFile,
   PrepareToLoadDNAFile,
   LoadDNAFile,
@@ -374,6 +378,11 @@ part 'serializers.g.dart';
   // BrowserClipboard,
   // CLIClipboard,
   UndoRedoItem,
+  TBaseLocations,
+  TBaseLocation,
+  CPDSite,
+  DetectCPDSites,
+  CPDDetectionResult,
 ])
 Serializers serializers = _$serializers;
 
