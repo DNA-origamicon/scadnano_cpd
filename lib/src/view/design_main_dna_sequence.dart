@@ -15,6 +15,9 @@ import '../state/loopout.dart';
 import '../state/extension.dart';
 import 'pure_component.dart';
 import '../util.dart' as util;
+import 'package:scadnano/src/state/app_state.dart'; // Store needed to dispatch t-base updates
+import 'package:redux/redux.dart';
+import 'package:scadnano/src/util/t_base_util.dart' as t_base_util;
 
 part 'design_main_dna_sequence.over_react.g.dart';
 
@@ -30,6 +33,10 @@ mixin DesignMainDNASequenceProps on UiProps implements TransformByHelixGroupProp
   late BuiltMap<String, HelixGroup> groups;
   late Geometry geometry;
   late BuiltMap<int, Point<double>> helix_idx_to_svg_position_map;
+
+  // Scanning for T-bases in the DNA sequence
+  bool? scan_for_t_bases;
+  Store<AppState>? store;
 }
 
 bool should_draw_domain(
@@ -39,6 +46,12 @@ bool should_draw_domain(
 ) => !only_display_selected_helices || side_selected_helix_idxs.contains(ss.helix);
 
 class DesignMainDNASequenceComponent extends UiComponent2<DesignMainDNASequenceProps> with PureComponent {
+  @override
+  Map get defaultProps => (newProps()
+    ..scan_for_t_bases = false
+    ..store = null
+  );
+
   @override
   render() {
     BuiltSet<int> side_selected_helix_idxs = props.side_selected_helix_idxs;
@@ -143,7 +156,49 @@ class DesignMainDNASequenceComponent extends UiComponent2<DesignMainDNASequenceP
       }
     }
 
-    var id = 'dna-${util.id_domain(domain)}';
+    // Generate a unique ID for the sequence element
+    var id = 'seq-domain-${props.strand.id}-h${domain.helix}-o${domain.offset_5p}';
+
+    // If there's no sequence to draw, return the empty element
+    if (seq_to_draw.isEmpty) {
+      return (Dom.text()
+        ..key = id
+        ..id = id
+        ..className = classname_dna_sequence
+        ..x = '$x'
+        ..y = '$y'
+        ..textLength = '$text_length'
+        ..transform = 'rotate(${rotate_degrees} ${rotate_x} ${rotate_y})'
+        ..dy = '$dy')('');
+    }
+
+    // Process the sequence and wrap T characters in tspan elements
+    var element_content = [];
+
+    for (int i = 0; i < seq_to_draw.length; i++) {
+      String base = seq_to_draw[i];
+      if ((props.scan_for_t_bases ?? false) && base.toUpperCase() == 'T' && props.store != null) {
+        try {
+          var structural_data = t_base_util.calculateStructuralIdentificationData(
+              state: props.store!.state,
+              strand_id: props.strand.id,
+              substrand: domain,
+              sequence_position: i);
+          var stable_id = t_base_util.generateStableId(structural_data);
+          var tspan = Dom.tspan()
+            ..key = 'tbase-domain-$i'
+            ..id = stable_id
+            ..addProps({'data-char-idx': '$i'});
+          element_content.add(tspan(base));
+        } catch (e) {
+          print('T-BASE ERROR (domain): Failed to process T for ${domain.id} at pos $i: $e');
+          element_content.add(base);
+        }
+      } else {
+        // Add other base types as plain text
+        element_content.add(base);
+      }
+    }
 
     // textLength is the more robust way to space out the letter than letterSpacing
     // (e.g., in Firefox it displays poorly with letterSpacing),
@@ -151,6 +206,7 @@ class DesignMainDNASequenceComponent extends UiComponent2<DesignMainDNASequenceP
     // So we provided an option to export SVG with each DNA base represented as its own text element
     // to avoid the problems with textLength in Powerpoint. Keeping the commented letterSpacing code
     // to remember why we don't want to use that anymore. :)
+    // Return the text element with processed content
     return (Dom.text()
       ..key = id
       ..id = id
@@ -160,7 +216,7 @@ class DesignMainDNASequenceComponent extends UiComponent2<DesignMainDNASequenceP
       ..textLength = '$text_length'
       // ..letterSpacing = '${(text_length - charWidth * seq_to_draw.length) / (seq_to_draw.length - 1)}'
       ..transform = 'rotate(${rotate_degrees} ${rotate_x} ${rotate_y})'
-      ..dy = '$dy')(seq_to_draw);
+      ..dy = '$dy')(element_content);
   }
 
   ReactElement _dna_sequence_on_insertion(Domain domain, int offset, int length) {
@@ -192,18 +248,78 @@ class DesignMainDNASequenceComponent extends UiComponent2<DesignMainDNASequenceP
       style_map['dominantBaseline'] = 'hanging';
     }
 
-    SvgProps text_path_props =
-        (Dom.textPath()
-          ..className = classname_dna_sequence + '-insertion'
-          //XXX: xlink:href is deprecated, but this is needed for exporting SVG, due to a bug in Inkscape
-          // https://gitlab.com/inkscape/inbox/issues/1763
-          ..xlinkHref = '#${util.id_insertion(domain, offset)}'
-          ..startOffset = start_offset
-          ..style = style_map);
+    // Generate unique ID for the insertion sequence
+    String text_path_id = 'seq-insertion-${props.strand.id}-h${domain.helix}-o${offset}';
 
-    return (Dom.text()
-      ..key = 'textelt-${util.id_insertion(domain, offset)}'
-      ..dy = dy)(text_path_props(subseq));
+    // Process sequence to wrap T characters in tspans
+    if (subseq != null) {
+      var element_content = [];
+
+      for (int i = 0; i < subseq.length; i++) {
+        String base = subseq[i];
+        if ((props.scan_for_t_bases ?? false) && base.toUpperCase() == 'T' && props.store != null) {
+          try {
+            var structural_data = t_base_util.calculateStructuralIdentificationData(
+                state: props.store!.state,
+                strand_id: props.strand.id,
+                substrand: domain,
+                sequence_position: i);
+            var stable_id = t_base_util.generateStableId(structural_data);
+            int insertion_point = offset;
+            stable_id = stable_id.replaceFirst('-', '-INS$insertion_point-');
+            var tspan = Dom.tspan()
+              ..key = 'tbase-insertion-$i'
+              ..id = stable_id
+              ..addProps({'data-char-idx': '$i'});
+            element_content.add(tspan(base));
+          } catch (e) {
+            print('T-BASE ERROR (insertion): Failed to process T for ${domain.id} at ins offset $offset, pos $i: $e');
+            element_content.add(base);
+          }
+        } else {
+          // Add other base types as plain text
+          element_content.add(base);
+        }
+      }
+
+      // For textPath we need to create the element directly
+      var text_path = Dom.textPath()
+        ..key = text_path_id
+        ..id = text_path_id
+        ..className = classname_dna_sequence + '-insertion'
+        //XXX: xlink:href is deprecated, but this is needed for exporting SVG, due to a bug in Inkscape
+        // https://gitlab.com/inkscape/inbox/issues/1763
+        ..xlinkHref = '#${util.id_insertion(domain, offset)}'
+        ..startOffset = start_offset
+        ..style = style_map;
+
+      // Add the processed content to the textPath
+      ReactElement text_path_element = text_path(element_content);
+
+      // Create the text element with the text path as a child
+      var text_element_id = 'textelt-insertion-${props.strand.id}-h${domain.helix}-o${offset}';
+      return (Dom.text()
+        ..key = text_element_id
+        ..id = text_element_id
+        ..dy = dy)([text_path_element]);
+    } else {
+      // Handle the case where there's no sequence data
+      // For textPath we need to create the element directly
+      var text_path = Dom.textPath()
+        ..key = text_path_id
+        ..id = text_path_id
+        ..className = classname_dna_sequence + '-insertion'
+        ..xlinkHref = '#${util.id_insertion(domain, offset)}'
+        ..startOffset = start_offset
+        ..style = style_map;
+
+      // Create the text element with the text path as a child
+      var text_element_id = 'textelt-insertion-${props.strand.id}-h${domain.helix}-o${offset}';
+      return (Dom.text()
+        ..key = text_element_id
+        ..id = text_element_id
+        ..dy = dy)([text_path('')]);
+    }
   }
 
   ReactElement _dna_sequence_on_loopout(Loopout loopout, Domain prev_domain, Domain next_domain) {
@@ -232,46 +348,122 @@ class DesignMainDNASequenceComponent extends UiComponent2<DesignMainDNASequenceP
       style_map = {'fontSize': '${font_size}px'};
     }
 
-    SvgProps text_path_props =
-        (Dom.textPath()
-          ..className = classname_dna_sequence + '-loopout'
-          ..xlinkHref = '#${loopout.id}'
-          ..startOffset = start_offset
-          ..style = style_map);
+    // Generate unique ID for the loopout sequence
+    String text_path_id = 'seq-loopout-${props.strand.id}-${loopout.prev_domain_idx}';
+
+    // Process sequence to wrap T-bases in tspans
+    var element_content = [];
+
+    for (int i = 0; i < subseq.length; i++) {
+      String base = subseq[i];
+      if ((props.scan_for_t_bases ?? false) && base.toUpperCase() == 'T' && props.store != null) {
+        try {
+          var structural_data = t_base_util.calculateStructuralIdentificationData(
+              state: props.store!.state,
+              strand_id: props.strand.id,
+              substrand: loopout,
+              sequence_position: i);
+          var stable_id = t_base_util.generateStableId(structural_data);
+          var tspan = Dom.tspan()
+            ..key = 'tbase-loopout-$i'
+            ..id = stable_id
+            ..addProps({'data-char-idx': '$i'});
+          element_content.add(tspan(base));
+        } catch (e) {
+          print('T-BASE ERROR (loopout): Failed to process T for ${loopout.id} at pos $i: $e');
+          element_content.add(base);
+        }
+      } else {
+        // Add other base types as plain text
+        element_content.add(base);
+      }
+    }
+
+    // Create the textPath element with processed content
+    var text_path = Dom.textPath()
+      ..key = text_path_id
+      ..id = text_path_id
+      ..className = classname_dna_sequence + '-loopout'
+      ..xlinkHref = '#${loopout.id}'
+      ..startOffset = start_offset
+      ..style = style_map;
+
+    // Add the processed content to the textPath
+    ReactElement text_path_element = text_path(element_content);
+
+    // Create a unique ID for the text element
+    String text_element_id = 'textelt-loopout-${props.strand.id}-${loopout.prev_domain_idx}';
+
+    // Create the text element with the text path as a child
     return (Dom.text()
-      ..key =
-          'loopout-dna'
-          'H${prev_domain.helix},${prev_domain.offset_3p}-'
-          'H${next_domain.helix},${next_domain.offset_5p}'
-      ..dy = dy)(text_path_props(subseq));
+      ..key = text_element_id
+      ..id = text_element_id
+      ..dy = dy)([text_path_element]);
   }
 
   ReactElement _dna_sequence_on_extension(Extension ext) {
-    var helix = props.helices[ext.adjacent_domain.helix]!;
-    var group = props.groups[helix.group]!;
-    var geometry = group.geometry ?? props.geometry;
-    var subseq = ext.dna_sequence;
-
-    var start_offset = '50%';
-    var dy = '${0.1 * geometry.base_height_svg}';
-
     Tuple2<double, int> ls_fs = _calculate_letter_spacing_and_font_size_extension(ext);
     double letter_spacing = ls_fs.item1;
     int font_size = ls_fs.item2;
 
+    var domain = ext.adjacent_domain;
+    var dna_sequence = ext.dna_sequence!;
+
+    var start_offset = '50%';
+    var dy = '${0.1 * props.geometry.base_height_svg}';
     Map<String, dynamic> style_map = {'letterSpacing': '${letter_spacing}em', 'fontSize': '${font_size}px'};
 
-    SvgProps text_path_props =
-        (Dom.textPath()
-          ..className = classname_dna_sequence + '-extension'
-          ..xlinkHref = '#${ext.id}'
-          ..startOffset = start_offset
-          ..style = style_map);
+    // Generate unique ID for the extension sequence
+    String text_path_id = 'seq-extension-${props.strand.id}-e${ext.is_5p ? "5p" : "3p"}';
+
+    // Process sequence to wrap T-bases in tspans
+    var element_content = [];
+
+    for (int i = 0; i < dna_sequence.length; i++) {
+      String base = dna_sequence[i];
+      if ((props.scan_for_t_bases ?? false) && base.toUpperCase() == 'T' && props.store != null) {
+        try {
+          var structural_data = t_base_util.calculateStructuralIdentificationData(
+              state: props.store!.state,
+              strand_id: props.strand.id,
+              substrand: ext,
+              sequence_position: i);
+          var stable_id = t_base_util.generateStableId(structural_data);
+          var tspan = Dom.tspan()
+            ..key = 'tbase-ext-$i'
+            ..id = stable_id
+            ..addProps({'data-char-idx': '$i'});
+          element_content.add(tspan(base));
+        } catch (e) {
+          print('T-BASE ERROR (extension): Failed to process T for ${ext.id} at pos $i: $e');
+          element_content.add(base);
+        }
+      } else {
+        // Add other base types as plain text
+        element_content.add(base);
+      }
+    }
+
+    // Create the textPath element with processed content
+    var text_path = Dom.textPath()
+      ..key = text_path_id
+      ..id = text_path_id
+      ..className = classname_dna_sequence + '-extension'
+      ..xlinkHref = '#${ext.id}'
+      ..startOffset = start_offset
+      ..style = style_map;
+
+    // Add the processed content to the textPath
+    ReactElement text_path_element = text_path(element_content);
+
+    // Create a unique ID for the text element
+    String text_element_id = 'textelt-extension-${props.strand.id}-e${ext.is_5p ? "5p" : "3p"}';
+
+    // Create the text element with the text path as a child
     return (Dom.text()
-      ..key =
-          'extension-dna-${ext.is_5p ? "5'" : "3'"}'
-          'H${ext.adjacent_domain.helix},${ext.adjacent_domain.start}-${ext.adjacent_domain.end}'
-      ..dy = dy)(text_path_props(subseq));
+      ..key = text_element_id
+      ..id = text_element_id
+      ..dy = dy)([text_path_element]);
   }
 }
 

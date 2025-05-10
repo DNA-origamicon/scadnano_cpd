@@ -14,6 +14,8 @@ import 'pure_component.dart';
 import '../constants.dart' as constants;
 import '../util.dart' as util;
 import 'design_main_dna_sequence.dart';
+import '../state/app_state.dart'; // For T-base tracking
+import 'package:redux/redux.dart';
 
 part 'design_main_dna_sequences.over_react.g.dart';
 
@@ -36,9 +38,18 @@ mixin DesignMainDNASequencesProps on UiProps {
   late bool disable_png_caching_dna_sequences;
   late bool retain_strand_color_on_selection;
   late bool display_reverse_DNA_right_side_up;
+
+  // For T-base position tracking
+  late bool scan_for_t_bases;
+  Store<AppState>? store;
 }
 
 class DesignMainDNASequencesComponent extends UiComponent2<DesignMainDNASequencesProps> with PureComponent {
+  @override
+  Map get defaultProps => newProps()
+    ..scan_for_t_bases = false
+    ..store = null;
+
   /// This method is used to handle the `disable_png_cache_until_action_completes` prop.
   /// If this prop is not null, then it dispatches the prop action before disabling it.
   @override
@@ -86,7 +97,9 @@ class DesignMainDNASequencesComponent extends UiComponent2<DesignMainDNASequence
               ..side_selected_helix_idxs = props.side_selected_helix_idxs
               ..only_display_selected_helices = props.only_display_selected_helices
               ..display_reverse_DNA_right_side_up = props.display_reverse_DNA_right_side_up
+              ..scan_for_t_bases = props.scan_for_t_bases
               ..helix_idx_to_svg_position_map = props.helix_idx_to_svg_position_map
+              ..store = props.store
               ..key = idx++
               ..className = 'strand-dna-sequence-elts')(),
       ]);

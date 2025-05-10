@@ -637,7 +637,8 @@ Ignored if design is not an origami (i.e., does not have at least one scaffold).
       view_menu_display_major_ticks_options(),
       view_menu_base_pairs(),
       view_menu_dna(),
-      DropdownDivider({'key': 'divider-dna'}),
+      view_menu_cpd_sites(),
+      DropdownDivider({'key': 'divider-cpd-sites'}),
       ...view_menu_show_oxview(),
       DropdownDivider({'key': 'divider-oxview'}),
       ...view_menu_zoom_speed(),
@@ -1068,6 +1069,38 @@ Displays DNA right-side up on reverse strands.'''
           );
         }
         ..key = 'display-reverse-DNA-right-side-up')(),
+    ]);
+  }
+
+  ReactElement view_menu_cpd_sites() {
+    return (MenuDropdownRight()
+      ..title_ = 'CPD Sites'
+      ..id_ = 'view_menu_cpd_sites-dropdown'
+      ..key = 'view_menu_cpd_sites-dropdown'
+      ..className = 'submenu_item')([
+      (MenuBoolean()
+        ..value = props.state.ui_state.show_cpd_sites_continuously
+        ..display = 'Show CPD Sites'
+        ..tooltip = 'Show/hide CPD site highlights. Requires DNA sequences to be visible.'
+        ..on_change = ((_) {
+          if (props.state.ui_state.show_dna) {
+            // Only dispatch if DNA is shown
+            app.dispatch(actions.ShowCPDSitesContinuouslySet.set(
+                !props.state.ui_state.show_cpd_sites_continuously)); // Use .set() factory
+          }
+        })
+        ..key = 'show-cpd-sites')(),
+      (MenuBoolean()
+        ..value = props.state.ui_state.show_all_t_bases
+        ..display = 'Show All T Bases'
+        ..tooltip = 'Show/hide highlights for all T bases. Requires DNA sequences to be visible.'
+        ..hide = !props.state.ui_state.show_cpd_sites_continuously
+        ..on_change = ((_) {
+          if (props.state.ui_state.show_dna) {
+            app.dispatch(actions.ShowAllTBasesSet.set(!props.state.ui_state.show_all_t_bases));
+          }
+        })
+        ..key = 'show-all-t-bases')(),
     ]);
   }
 

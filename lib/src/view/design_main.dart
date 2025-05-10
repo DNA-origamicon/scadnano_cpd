@@ -38,6 +38,7 @@ import 'selection_box_view.dart';
 import 'react_dnd.dart';
 import '../util.dart' as util;
 import '../app.dart';
+import 'design_main_cpd_highlights.dart';
 
 part 'design_main.over_react.g.dart';
 
@@ -189,7 +190,12 @@ class DesignMainComponent extends UiComponent2<DesignMainProps> {
           ..disable_png_caching_dna_sequences = ui_state.disable_png_caching_dna_sequences
           ..retain_strand_color_on_selection = ui_state.retain_strand_color_on_selection
           ..display_reverse_DNA_right_side_up = ui_state.display_reverse_DNA_right_side_up
+          ..scan_for_t_bases = true
+          ..store = app.store
           ..key = 'dna-sequences')(),
+
+      // T-base highlights - render right after DNA sequences
+      (ConnectedDesignMainCPDHighlights()..key = 't-base-highlights')(),
 
       if (ui_state.show_loopout_extension_length)
         (DesignMainLoopoutExtensionLengths()
