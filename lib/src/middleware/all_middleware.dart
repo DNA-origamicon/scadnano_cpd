@@ -39,6 +39,8 @@ import 'helix_remove.dart';
 import 'helices_positions_set_based_on_crossovers.dart';
 import 'invalidate_png.dart';
 import 'autostaple_and_autobreak.dart';
+import 'detect_cpd_sites.dart';
+import 'cpd_auto_trigger_middleware.dart';
 import 'zoom_speed.dart';
 
 final all_middleware = List<Middleware<AppState>>.unmodifiable([
@@ -80,4 +82,6 @@ final all_middleware = List<Middleware<AppState>>.unmodifiable([
   zoom_speed_middleware,
   oxdna_export_middleware,
   oxview_update_view_middleware,
+  detect_cpd_sites_middleware,
+  cpd_auto_trigger_middleware,
 ]);
