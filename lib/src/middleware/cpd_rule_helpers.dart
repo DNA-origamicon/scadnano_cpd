@@ -70,6 +70,9 @@ class TBaseData {
       loopout_anchor2_is_5p_end_of_loop_seq; // True if this anchor corresponds to the 5'-end of the loopout's own sequence
   final int? loopout_eff_dist_from_anchor2;
 
+  // --- Domain Specific Precomputed Info ---
+  final bool? is_on_double_stranded_domain;
+
   TBaseData({
     required this.stable_id,
     required this.parent_element_id,
@@ -106,6 +109,9 @@ class TBaseData {
     this.loopout_anchor2_parent_domain_forward,
     this.loopout_anchor2_is_5p_end_of_loop_seq,
     this.loopout_eff_dist_from_anchor2,
+
+    // Domain fields
+    this.is_on_double_stranded_domain,
   });
 
   Map<String, dynamic> toMap() {
@@ -137,10 +143,12 @@ class TBaseData {
       'loopout_anchor2_parent_domain_forward': loopout_anchor2_parent_domain_forward,
       'loopout_anchor2_is_5p_end_of_loop_seq': loopout_anchor2_is_5p_end_of_loop_seq,
       'loopout_eff_dist_from_anchor2': loopout_eff_dist_from_anchor2,
+      'is_on_double_stranded_domain': is_on_double_stranded_domain,
     };
   }
 
   // Helper getters for conditions.
+  bool get isOnDomain => substrand_type == SubstrandTypeEnum.DOMAIN;
   bool get isOnExtension => substrand_type == SubstrandTypeEnum.EXTENSION;
   bool get isLoopout => substrand_type == SubstrandTypeEnum.LOOPOUT;
 
@@ -416,6 +424,54 @@ class AdjacentExtensionLoopoutAlignedPairCondition implements PairCondition {
   }
 }
 
+// Conditions for Rule 3: Adjacent T's on a double-stranded domain
+class IsOnDomainCondition implements TBaseCondition {
+  @override
+  bool evaluate(TBaseData t) => t.isOnDomain;
+}
+
+class IsOnDoubleStrandedDomainCondition implements TBaseCondition {
+  @override
+  bool evaluate(TBaseData t) {
+    // This condition should only be checked for domains.
+    // The precomputation logic sets this field only for domains.
+    return t.is_on_double_stranded_domain ?? false;
+  }
+}
+
+class IsNotInInsertionCondition implements TBaseCondition {
+  @override
+  bool evaluate(TBaseData t) {
+    if (!t.isOnDomain) {
+      return true; // Not on a domain, so can't be in an insertion on a domain.
+    }
+    var domain = t.substrand_object as Domain;
+    if (domain.insertions.isEmpty) {
+      return true;
+    }
+    for (var insertion in domain.insertions) {
+      // An insertion is a sequence of bases starting at `insertion.offset`.
+      if (t.idx_in_substrand >= insertion.offset &&
+          t.idx_in_substrand < insertion.offset + insertion.length) {
+        return false; // This T-base is inside an insertion.
+      }
+    }
+    return true;
+  }
+}
+
+class AreImmediateNeighborsOnSameDomainCondition implements PairCondition {
+  @override
+  bool evaluate(TBaseData t1, TBaseData t2) {
+    // Check if they are on the same strand and same domain object.
+    if (t1.substrand_object != t2.substrand_object) {
+      return false;
+    }
+    // Check if their indices within that domain are consecutive.
+    return (t1.idx_in_substrand - t2.idx_in_substrand).abs() == 1;
+  }
+}
+
 // Common Conditions
 class AreNotOnSameStrandCondition implements PairCondition {
   @override
@@ -468,11 +524,22 @@ final extensionLoopoutRule = RuleDefinition(
   score: 1.0, // Initial score
 );
 
+final adjacentDomainDoubleStrandRule = RuleDefinition(
+  ruleName: "adjacentDomainDoubleStrandRule",
+  t1_conditions: [IsOnDomainCondition(), IsOnDoubleStrandedDomainCondition(), IsNotInInsertionCondition()],
+  t2_conditions: [IsOnDomainCondition(), IsOnDoubleStrandedDomainCondition(), IsNotInInsertionCondition()],
+  pair_conditions: [
+    AreImmediateNeighborsOnSameDomainCondition()
+  ],
+  score: 1.0,
+);
+
 // List of all active rules - EXPORTED
 final allRuleDefinitions = [
   adjacentExtensionRule,
   adjacentLoopoutRule,
   extensionLoopoutRule,
+  adjacentDomainDoubleStrandRule,
 ];
 
 class IdentifiedTBase {
@@ -605,6 +672,23 @@ CPDDetectionOutput detect_cpd_sites_from_t_bases(Design design, List<IdentifiedT
     [List<RuleDefinition>? rules_to_process]) {
   List<TBaseData> populated_t_base_data_list = [];
 
+  // Pre-calculate all occupied helix coordinates to efficiently check for double-strandedness.
+  // Map key is <helix, offset>, value is the set of `forward` values at that coordinate.
+  var occupied_coords = <Tuple2<int, int>, Set<bool>>{};
+  for (var strand in design.strands) {
+    for (var ss in strand.substrands) {
+      if (ss is Domain) {
+        // Iterate through valid offsets, skipping deletions.
+        for (var offset in ss.offsets_in_5p_3p_order) {
+          if (ss.deletions.contains(offset)) continue;
+          var key = Tuple2(ss.helix, offset);
+          occupied_coords.putIfAbsent(key, () => <bool>{});
+          occupied_coords[key]!.add(ss.forward);
+        }
+      }
+    }
+  }
+
   for (var input_t in identified_t_bases) {
     try {
       Strand strand = input_t.strand;
@@ -637,6 +721,8 @@ CPDDetectionOutput detect_cpd_sites_from_t_bases(Design design, List<IdentifiedT
       bool? loopout_anchor2_parent_domain_forward_val;
       bool? loopout_anchor2_is_5p_end_of_loop_seq_val;
       int? loopout_eff_dist_from_anchor2_val;
+
+      bool? is_on_double_stranded_domain_val;
 
       if (ss is Extension) {
         substrand_type_enum_val = SubstrandTypeEnum.EXTENSION;
@@ -714,6 +800,16 @@ CPDDetectionOutput detect_cpd_sites_from_t_bases(Design design, List<IdentifiedT
         Domain domain = ss;
         forward_val = domain.forward;
         helix_idx_val = domain.helix;
+
+        // Check if the domain is double-stranded at this T's position
+        int offset_at_t = domain.substrand_dna_idx_to_substrand_offset(idx_in_substrand_val, forward_val);
+        var key = Tuple2(helix_idx_val, offset_at_t);
+        var directions_at_coord = occupied_coords[key];
+        if (directions_at_coord != null) {
+          is_on_double_stranded_domain_val = directions_at_coord.contains(!forward_val);
+        } else {
+          is_on_double_stranded_domain_val = false;
+        }
       } else {
         print(
             "Error precomputing TBaseData for ${input_t.source_id}: Unknown substrand type ${ss.runtimeType}");
@@ -758,6 +854,7 @@ CPDDetectionOutput detect_cpd_sites_from_t_bases(Design design, List<IdentifiedT
         loopout_anchor2_parent_domain_forward: loopout_anchor2_parent_domain_forward_val,
         loopout_anchor2_is_5p_end_of_loop_seq: loopout_anchor2_is_5p_end_of_loop_seq_val,
         loopout_eff_dist_from_anchor2: loopout_eff_dist_from_anchor2_val,
+        is_on_double_stranded_domain: is_on_double_stranded_domain_val,
       );
       populated_t_base_data_list.add(t_data);
     } catch (e, stackTrace) {
@@ -805,9 +902,11 @@ class RuleProcessor {
 
     var extensions = <TBaseData>[];
     var loopouts = <TBaseData>[];
+    var domains = <TBaseData>[];
     for (var t in t_bases) {
       if (t.isOnExtension) extensions.add(t);
       if (t.isLoopout) loopouts.add(t);
+      if (t.isOnDomain) domains.add(t);
     }
 
     for (var rule in rules) {
@@ -841,6 +940,32 @@ class RuleProcessor {
           for (TBaseData t_loop in loopouts) {
             if (_evaluate_rule_for_pair(rule, t_ext, t_loop)) {
               rule_candidates.add(Tuple3(t_ext, t_loop, rule.score));
+            }
+          }
+        }
+      } else if (rule.ruleName == "adjacentDomainDoubleStrandRule") {
+        if (domains.length < 2) continue;
+
+        // Group T's by their substrand object to check for neighbors on the same domain
+        var t_bases_by_substrand = <Substrand, List<TBaseData>>{};
+        for (var t_base in domains) {
+          t_bases_by_substrand.putIfAbsent(t_base.substrand_object, () => []).add(t_base);
+        }
+
+        for (var group in t_bases_by_substrand.values) {
+          if (group.length < 2) continue;
+          // Sort by index to make finding adjacent T's a linear scan
+          group.sort((a, b) => a.idx_in_substrand.compareTo(b.idx_in_substrand));
+
+          for (int i = 0; i < group.length - 1; i++) {
+            TBaseData t1 = group[i];
+            TBaseData t2 = group[i + 1];
+
+            // The pair is guaranteed to be on the same strand and domain.
+            // The AreImmediateNeighborsOnSameDomainCondition will check if they are truly adjacent.
+            // Other conditions (double-stranded, not-in-insertion) are checked on each T-base.
+            if (_evaluate_rule_for_pair(rule, t1, t2)) {
+              rule_candidates.add(Tuple3(t1, t2, rule.score));
             }
           }
         }
