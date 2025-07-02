@@ -4863,3 +4863,21 @@ abstract class OxExportOnlySelectedStrandsSet
   @memoized
   int get hashCode;
 }
+
+abstract class PdbExport with BuiltJsonSerializable implements Action, Built<PdbExport, PdbExportBuilder> {
+  bool get selected_strands_only;
+
+  /************************ begin BuiltValue boilerplate ************************/
+  factory PdbExport({bool selected_strands_only = false}) {
+    return PdbExport.from((b) => b..selected_strands_only = selected_strands_only);
+  }
+
+  PdbExport._();
+
+  factory PdbExport.from([void Function(PdbExportBuilder) updates]) = _$PdbExport;
+
+  static Serializer<PdbExport> get serializer => _$pdbExportSerializer;
+
+  @memoized
+  int get hashCode;
+}

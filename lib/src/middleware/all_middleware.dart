@@ -1,5 +1,6 @@
 import 'package:redux/redux.dart';
 import 'package:scadnano/src/middleware/system_clipboard.dart';
+import 'package:scadnano/src/middleware/pdb_export.dart';
 
 import '../state/app_state.dart';
 import 'dna_extensions_move_start.dart';
@@ -84,4 +85,5 @@ final all_middleware = List<Middleware<AppState>>.unmodifiable([
   oxview_update_view_middleware,
   detect_cpd_sites_middleware,
   cpd_auto_trigger_middleware,
+  pdb_export_middleware,
 ]);

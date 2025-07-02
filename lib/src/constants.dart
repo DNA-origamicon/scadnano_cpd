@@ -496,3 +496,5 @@ enum strand_bounds_status {
   in_bounds_with_max_offset_changes,
   in_bounds,
 }
+
+const PDB_TEMPLATE_PATH = "dd12_na.pdb";

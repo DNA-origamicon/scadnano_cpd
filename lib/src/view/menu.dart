@@ -1343,6 +1343,14 @@ cadnano files that have whitespace. ("Bad .json file format is detected in
         ..tooltip = "Export design to oxDNA .dat and .top files, which can be loaded in oxDNA or oxView."
         ..display = 'oxDNA'
         ..key = 'export-oxdna')(),
+      (MenuDropdownItem()
+        ..on_click =
+            ((_) => app.dispatch(
+              actions.PdbExport(selected_strands_only: props.state.ui_state.ox_export_only_selected_strands),
+            ))
+        ..tooltip = "Export design to PDB file"
+        ..display = 'PDB (.pdb)'
+        ..key = 'export-pdb')(),
       (MenuBoolean()
         ..value = props.state.ui_state.ox_export_only_selected_strands
         ..display = 'export only selected strands'
