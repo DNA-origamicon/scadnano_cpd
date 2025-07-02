@@ -1,0 +1,17 @@
+[
+    {
+        "t1_stable_id": "tb-strandstrand_H0_12_forward-_$Extension-extension_3p_strand_H0_12_forward-hna-ona-l5-p0-fwd",
+        "t2_stable_id": "tb-strandstrand_H0_17_forward-_$Extension-extension_5p_strand_H0_17_forward-hna-ona-l1-p1-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H0_27_reverse-_$Extension-extension_5p_strand_H0_27_reverse-hna-ona-l0-p0-fwd",
+        "t2_stable_id": "tb-strandstrand_H0_32_reverse-_$Extension-extension_3p_strand_H0_32_reverse-hna-ona-l6-p1-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H0_1_forward-_$Extension-extension_3p_strand_H0_1_forward-hna-ona-l6-p1-fwd",
+        "t2_stable_id": "tb-strandstrand_H0_6_forward-_$Extension-extension_5p_strand_H0_6_forward-hna-ona-l2-p2-fwd",
+        "is_conflicted": false
+    }
+]

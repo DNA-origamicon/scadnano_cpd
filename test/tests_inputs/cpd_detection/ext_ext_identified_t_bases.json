@@ -1,0 +1,62 @@
+[
+    {
+        "source_id": "tb-strandstrand_H0_12_forward-_$Extension-extension_3p_strand_H0_12_forward-hna-ona-l5-p0-fwd",
+        "strand_id": "strand-H0-12-forward",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H0_17_forward-_$Extension-extension_5p_strand_H0_17_forward-hna-ona-l1-p1-fwd",
+        "strand_id": "strand-H0-17-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H0_27_reverse-_$Extension-extension_5p_strand_H0_27_reverse-hna-ona-l0-p0-fwd",
+        "strand_id": "strand-H0-27-reverse",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H0_32_reverse-_$Extension-extension_3p_strand_H0_32_reverse-hna-ona-l6-p1-fwd",
+        "strand_id": "strand-H0-32-reverse",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H0_1_forward-_$Extension-extension_3p_strand_H0_1_forward-hna-ona-l6-p1-fwd",
+        "strand_id": "strand-H0-1-forward",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H0_6_forward-_$Extension-extension_5p_strand_H0_6_forward-hna-ona-l2-p2-fwd",
+        "strand_id": "strand-H0-6-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 2
+    },
+    {
+        "source_id": "tb-strandstrand_H0_40_forward-_$Extension-extension_5p_strand_H0_40_forward-hna-ona-l1-p1-fwd",
+        "strand_id": "strand-H0-40-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H0_34_forward-_$Extension-extension_3p_strand_H0_34_forward-hna-ona-l5-p0-fwd",
+        "strand_id": "strand-H0-34-forward",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H0_44_reverse-_$Extension-extension_3p_strand_H0_44_reverse-hna-ona-l5-p0-fwd",
+        "strand_id": "strand-H0-44-reverse",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H0_39_reverse-_$Extension-extension_5p_strand_H0_39_reverse-hna-ona-l0-p0-fwd",
+        "strand_id": "strand-H0-39-reverse",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 0
+    }
+]

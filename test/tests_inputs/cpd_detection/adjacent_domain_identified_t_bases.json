@@ -1,0 +1,104 @@
+[
+    {
+        "source_id": "tb-strandstrand_H0_5_forward-SubstrandTypeEnum.DOMAIN-substrand_H0_5_7_forward-h0-o5-l0-p0-fwd",
+        "strand_id": "strand-H0-5-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H0_5_forward-SubstrandTypeEnum.DOMAIN-substrand_H0_5_7_forward-h0-o6-l1-p1-fwd",
+        "strand_id": "strand-H0-5-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H1_3_reverse-SubstrandTypeEnum.DOMAIN-substrand_H1_2_4_reverse-h1-o3-l0-p0-rev",
+        "strand_id": "strand-H1-3-reverse",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H1_3_reverse-SubstrandTypeEnum.DOMAIN-substrand_H1_2_4_reverse-h1-o2-l1-p1-rev",
+        "strand_id": "strand-H1-3-reverse",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H2_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H2_2_7_forward-h2-o4-l2-p2-fwd",
+        "strand_id": "strand-H2-2-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 2
+    },
+    {
+        "source_id": "tb-strandstrand_H2_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H2_2_7_forward-h2-o5-l3-p3-fwd",
+        "strand_id": "strand-H2-2-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 3
+    },
+    {
+        "source_id": "tb-strandstrand_H3_0_forward-SubstrandTypeEnum.DOMAIN-substrand_H3_0_2_forward-h3-o1-l1-p1-fwd",
+        "strand_id": "strand-H3-0-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H3_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H3_2_4_forward-h3-o2-l0-p0-fwd",
+        "strand_id": "strand-H3-2-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H4_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H4_2_4_forward-h4-o2-l0-p0-fwd",
+        "strand_id": "strand-H4-2-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H4_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H4_2_4_forward-h4-o3-l1-p1-fwd",
+        "strand_id": "strand-H4-2-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H5_5_reverse-SubstrandTypeEnum.DOMAIN-substrand_H5_4_6_reverse-h5-o5-l0-p0-rev",
+        "strand_id": "strand-H5-5-reverse",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H5_5_reverse-SubstrandTypeEnum.DOMAIN-substrand_H5_4_6_reverse-h5-o4-l1-p1-rev",
+        "strand_id": "strand-H5-5-reverse",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H6_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H6_2_7_forward-h6-o3-l1-p1-fwd",
+        "strand_id": "strand-H6-2-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H6_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H6_2_7_forward-h6-o5-l3-p3-fwd",
+        "strand_id": "strand-H6-2-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 3
+    },
+    {
+        "source_id": "tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o10-l0-p0-fwd",
+        "strand_id": "strand-H7-10-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o11-l1-p1-fwd",
+        "strand_id": "strand-H7-10-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o12-l2-p2-fwd",
+        "strand_id": "strand-H7-10-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 2
+    }
+]

@@ -1,0 +1,128 @@
+[
+    {
+        "source_id": "tb-strandstrand_H1_4_forward-_$Extension-extension_5p_strand_H1_4_forward-hna-ona-l1-p1-fwd",
+        "strand_id": "strand-H1-4-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H1_4_forward-_$Extension-extension_5p_strand_H1_4_forward-hna-ona-l3-p3-fwd",
+        "strand_id": "strand-H1-4-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 3
+    },
+    {
+        "source_id": "tb-strandstrand_H1_4_forward-_$Extension-extension_3p_strand_H1_4_forward-hna-ona-l9-p0-fwd",
+        "strand_id": "strand-H1-4-forward",
+        "substrand_idx_in_strand": 2,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H0_10_reverse-_$Loopout-loopout_1_strand_H0_10_reverse-hna-ona-l5-p2-fwd",
+        "strand_id": "strand-H0-10-reverse",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 2
+    },
+    {
+        "source_id": "tb-strandstrand_H1_36_reverse-_$Loopout-loopout_1_strand_H1_36_reverse-hna-ona-l3-p1-fwd",
+        "strand_id": "strand-H1-36-reverse",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H1_36_reverse-_$Loopout-loopout_1_strand_H1_36_reverse-hna-ona-l5-p3-fwd",
+        "strand_id": "strand-H1-36-reverse",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 3
+    },
+    {
+        "source_id": "tb-strandstrand_H0_29_forward-_$Extension-extension_5p_strand_H0_29_forward-hna-ona-l0-p0-fwd",
+        "strand_id": "strand-H0-29-forward",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H0_29_forward-_$Extension-extension_3p_strand_H0_29_forward-hna-ona-l7-p0-fwd",
+        "strand_id": "strand-H0-29-forward",
+        "substrand_idx_in_strand": 2,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H1_34_reverse-_$Extension-extension_5p_strand_H1_34_reverse-hna-ona-l1-p1-fwd",
+        "strand_id": "strand-H1-34-reverse",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H1_34_reverse-_$Extension-extension_3p_strand_H1_34_reverse-hna-ona-l10-p1-fwd",
+        "strand_id": "strand-H1-34-reverse",
+        "substrand_idx_in_strand": 2,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H0_20_reverse-_$Extension-extension_5p_strand_H0_20_reverse-hna-ona-l0-p0-fwd",
+        "strand_id": "strand-H0-20-reverse",
+        "substrand_idx_in_strand": 0,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H0_20_reverse-_$Extension-extension_3p_strand_H0_20_reverse-hna-ona-l10-p2-fwd",
+        "strand_id": "strand-H0-20-reverse",
+        "substrand_idx_in_strand": 2,
+        "idx_in_substrand_sequence": 2
+    },
+    {
+        "source_id": "tb-strandstrand_H0_23_reverse-_$Loopout-loopout_1_strand_H0_23_reverse-hna-ona-l5-p2-fwd",
+        "strand_id": "strand-H0-23-reverse",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 2
+    },
+    {
+        "source_id": "tb-strandstrand_H0_46_reverse-_$Loopout-loopout_1_strand_H0_46_reverse-hna-ona-l5-p1-fwd",
+        "strand_id": "strand-H0-46-reverse",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H0_46_reverse-_$Loopout-loopout_1_strand_H0_46_reverse-hna-ona-l7-p3-fwd",
+        "strand_id": "strand-H0-46-reverse",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 3
+    },
+    {
+        "source_id": "tb-strandstrand_H0_40_forward-_$Extension-extension_3p_strand_H0_40_forward-hna-ona-l4-p1-fwd",
+        "strand_id": "strand-H0-40-forward",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H1_40_forward-_$Extension-extension_3p_strand_H1_40_forward-hna-ona-l4-p1-fwd",
+        "strand_id": "strand-H1-40-forward",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H1_13_forward-_$Loopout-loopout_1_strand_H1_13_forward-hna-ona-l3-p0-fwd",
+        "strand_id": "strand-H1-13-forward",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 0
+    },
+    {
+        "source_id": "tb-strandstrand_H1_1_forward-_$Loopout-loopout_1_strand_H1_1_forward-hna-ona-l4-p1-fwd",
+        "strand_id": "strand-H1-1-forward",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 1
+    },
+    {
+        "source_id": "tb-strandstrand_H1_1_forward-_$Loopout-loopout_1_strand_H1_1_forward-hna-ona-l6-p3-fwd",
+        "strand_id": "strand-H1-1-forward",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 3
+    },
+    {
+        "source_id": "tb-strandstrand_H0_26_forward-_$Loopout-loopout_1_strand_H0_26_forward-hna-ona-l3-p0-fwd",
+        "strand_id": "strand-H0-26-forward",
+        "substrand_idx_in_strand": 1,
+        "idx_in_substrand_sequence": 0
+    }
+]

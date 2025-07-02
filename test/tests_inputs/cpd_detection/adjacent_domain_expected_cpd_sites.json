@@ -1,0 +1,27 @@
+[
+    {
+        "t1_stable_id": "tb-strandstrand_H0_5_forward-SubstrandTypeEnum.DOMAIN-substrand_H0_5_7_forward-h0-o5-l0-p0-fwd",
+        "t2_stable_id": "tb-strandstrand_H0_5_forward-SubstrandTypeEnum.DOMAIN-substrand_H0_5_7_forward-h0-o6-l1-p1-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H1_3_reverse-SubstrandTypeEnum.DOMAIN-substrand_H1_2_4_reverse-h1-o3-l0-p0-rev",
+        "t2_stable_id": "tb-strandstrand_H1_3_reverse-SubstrandTypeEnum.DOMAIN-substrand_H1_2_4_reverse-h1-o2-l1-p1-rev",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H2_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H2_2_7_forward-h2-o4-l2-p2-fwd",
+        "t2_stable_id": "tb-strandstrand_H2_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H2_2_7_forward-h2-o5-l3-p3-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o10-l0-p0-fwd",
+        "t2_stable_id": "tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o11-l1-p1-fwd",
+        "is_conflicted": true
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o11-l1-p1-fwd",
+        "t2_stable_id": "tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o12-l2-p2-fwd",
+        "is_conflicted": true
+    }
+]

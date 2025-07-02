@@ -1,0 +1,12 @@
+[
+    {
+        "t1_stable_id": "tb-strandstrand_H1_12_forward-_$Loopout-loopout_1_strand_H1_12_forward-hna-ona-l7-p2-fwd",
+        "t2_stable_id": "tb-strandstrand_H0_20_reverse-_$Loopout-loopout_1_strand_H0_20_reverse-hna-ona-l4-p0-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H0_3_forward-_$Loopout-loopout_1_strand_H0_3_forward-hna-ona-l5-p2-fwd",
+        "t2_stable_id": "tb-strandstrand_H1_9_reverse-_$Loopout-loopout_1_strand_H1_9_reverse-hna-ona-l4-p0-fwd",
+        "is_conflicted": false
+    }
+]

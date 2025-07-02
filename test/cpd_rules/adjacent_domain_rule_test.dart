@@ -5,6 +5,7 @@ import 'package:scadnano/src/middleware/cpd_rule_helpers.dart';
 import 'package:test/test.dart';
 import 'dart:convert';
 import 'package:collection/collection.dart';
+import 'package:scadnano/src/util.dart' as util;
 
 class ExpectedCPDSite {
   final String t1_id;
@@ -29,61 +30,6 @@ class ExpectedCPDSite {
   String toString() => 'ExpectedCPDSite(t1: $t1_id, t2: $t2_id, conflicted: $is_conflicted)';
 }
 
-// Logs will be populated in the next step.
-const String identifiedTBasesJsonLog = '''
-[{"source_id":"tb-strandstrand_H0_5_forward-SubstrandTypeEnum.DOMAIN-substrand_H0_5_7_forward-h0-o5-l0-p0-fwd","strand_id":"strand-H0-5-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":0},{"source_id":"tb-strandstrand_H0_5_forward-SubstrandTypeEnum.DOMAIN-substrand_H0_5_7_forward-h0-o6-l1-p1-fwd","strand_id":"strand-H0-5-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":1},{"source_id":"tb-strandstrand_H1_3_reverse-SubstrandTypeEnum.DOMAIN-substrand_H1_2_4_reverse-h1-o3-l0-p0-rev","strand_id":"strand-H1-3-reverse","substrand_idx_in_strand":0,"idx_in_substrand_sequence":0},{"source_id":"tb-strandstrand_H1_3_reverse-SubstrandTypeEnum.DOMAIN-substrand_H1_2_4_reverse-h1-o2-l1-p1-rev","strand_id":"strand-H1-3-reverse","substrand_idx_in_strand":0,"idx_in_substrand_sequence":1},{"source_id":"tb-strandstrand_H2_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H2_2_7_forward-h2-o4-l2-p2-fwd","strand_id":"strand-H2-2-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":2},{"source_id":"tb-strandstrand_H2_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H2_2_7_forward-h2-o5-l3-p3-fwd","strand_id":"strand-H2-2-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":3},{"source_id":"tb-strandstrand_H3_0_forward-SubstrandTypeEnum.DOMAIN-substrand_H3_0_2_forward-h3-o1-l1-p1-fwd","strand_id":"strand-H3-0-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":1},{"source_id":"tb-strandstrand_H3_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H3_2_4_forward-h3-o2-l0-p0-fwd","strand_id":"strand-H3-2-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":0},{"source_id":"tb-strandstrand_H4_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H4_2_4_forward-h4-o2-l0-p0-fwd","strand_id":"strand-H4-2-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":0},{"source_id":"tb-strandstrand_H4_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H4_2_4_forward-h4-o3-l1-p1-fwd","strand_id":"strand-H4-2-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":1},{"source_id":"tb-strandstrand_H5_5_reverse-SubstrandTypeEnum.DOMAIN-substrand_H5_4_6_reverse-h5-o5-l0-p0-rev","strand_id":"strand-H5-5-reverse","substrand_idx_in_strand":0,"idx_in_substrand_sequence":0},{"source_id":"tb-strandstrand_H5_5_reverse-SubstrandTypeEnum.DOMAIN-substrand_H5_4_6_reverse-h5-o4-l1-p1-rev","strand_id":"strand-H5-5-reverse","substrand_idx_in_strand":0,"idx_in_substrand_sequence":1},{"source_id":"tb-strandstrand_H6_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H6_2_7_forward-h6-o3-l1-p1-fwd","strand_id":"strand-H6-2-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":1},{"source_id":"tb-strandstrand_H6_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H6_2_7_forward-h6-o5-l3-p3-fwd","strand_id":"strand-H6-2-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":3},{"source_id":"tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o10-l0-p0-fwd","strand_id":"strand-H7-10-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":0},{"source_id":"tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o11-l1-p1-fwd","strand_id":"strand-H7-10-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":1},{"source_id":"tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o12-l2-p2-fwd","strand_id":"strand-H7-10-forward","substrand_idx_in_strand":0,"idx_in_substrand_sequence":2}]
-''';
-
-const String cpdSitesJsonLog = '''
-[{"t1_stable_id":"tb-strandstrand_H0_5_forward-SubstrandTypeEnum.DOMAIN-substrand_H0_5_7_forward-h0-o5-l0-p0-fwd","t2_stable_id":"tb-strandstrand_H0_5_forward-SubstrandTypeEnum.DOMAIN-substrand_H0_5_7_forward-h0-o6-l1-p1-fwd","is_conflicted":false},{"t1_stable_id":"tb-strandstrand_H1_3_reverse-SubstrandTypeEnum.DOMAIN-substrand_H1_2_4_reverse-h1-o3-l0-p0-rev","t2_stable_id":"tb-strandstrand_H1_3_reverse-SubstrandTypeEnum.DOMAIN-substrand_H1_2_4_reverse-h1-o2-l1-p1-rev","is_conflicted":false},{"t1_stable_id":"tb-strandstrand_H2_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H2_2_7_forward-h2-o4-l2-p2-fwd","t2_stable_id":"tb-strandstrand_H2_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H2_2_7_forward-h2-o5-l3-p3-fwd","is_conflicted":false},{"t1_stable_id":"tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o10-l0-p0-fwd","t2_stable_id":"tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o11-l1-p1-fwd","is_conflicted":true},{"t1_stable_id":"tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o11-l1-p1-fwd","t2_stable_id":"tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o12-l2-p2-fwd","is_conflicted":true}]
-''';
-
-const String tBaseLocationsJsonLog = '''
-[{"stable_id":"tb-strandstrand_H0_5_forward-SubstrandTypeEnum.DOMAIN-substrand_H0_5_7_forward-h0-o5-l0-p0-fwd","strand_id":"strand-H0-5-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":0,"precise_offset":0,"forward":true,"sequence_element_id":"substrand-H0-5-7-forward","sequence_position":0,"parent_element_id":"seq-domain-strand-H0-5-forward-h0-o5","visual_x":55.40038871765137,"visual_y":2.499959945678711,"grid_anchor_x":54.999120000000005,"grid_anchor_y":4.99992},{"stable_id":"tb-strandstrand_H0_5_forward-SubstrandTypeEnum.DOMAIN-substrand_H0_5_7_forward-h0-o6-l1-p1-fwd","strand_id":"strand-H0-5-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":1,"precise_offset":1,"forward":true,"sequence_element_id":"substrand-H0-5-7-forward","sequence_position":1,"parent_element_id":"seq-domain-strand-H0-5-forward-h0-o5","visual_x":64.77768898010254,"visual_y":2.499959945678711,"grid_anchor_x":64.99896000000001,"grid_anchor_y":4.99992},{"stable_id":"tb-strandstrand_H1_3_reverse-SubstrandTypeEnum.DOMAIN-substrand_H1_2_4_reverse-h1-o3-l0-p0-rev","strand_id":"strand-H1-3-reverse","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":0,"precise_offset":0,"forward":false,"sequence_element_id":"substrand-H1-2-4-reverse","sequence_position":0,"parent_element_id":"seq-domain-strand-H1-3-reverse-h1-o3","visual_x":34.59817180145265,"visual_y":107.8597253833008,"grid_anchor_x":34.99944000000001,"grid_anchor_y":105.35976000000001},{"stable_id":"tb-strandstrand_H1_3_reverse-SubstrandTypeEnum.DOMAIN-substrand_H1_2_4_reverse-h1-o2-l1-p1-rev","strand_id":"strand-H1-3-reverse","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":1,"precise_offset":1,"forward":false,"sequence_element_id":"substrand-H1-2-4-reverse","sequence_position":1,"parent_element_id":"seq-domain-strand-H1-3-reverse-h1-o3","visual_x":25.220874400024428,"visual_y":107.8597253833008,"grid_anchor_x":24.9996,"grid_anchor_y":105.35976000000001},{"stable_id":"tb-strandstrand_H2_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H2_2_7_forward-h2-o4-l2-p2-fwd","strand_id":"strand-H2-2-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":2,"precise_offset":2,"forward":true,"sequence_element_id":"substrand-H2-2-7-forward","sequence_position":2,"parent_element_id":"seq-domain-strand-H2-2-forward-h2-o2","visual_x":45.08928108215332,"visual_y":183.219970703125,"grid_anchor_x":44.999280000000006,"grid_anchor_y":185.71992},{"stable_id":"tb-strandstrand_H2_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H2_2_7_forward-h2-o5-l3-p3-fwd","strand_id":"strand-H2-2-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":3,"precise_offset":3,"forward":true,"sequence_element_id":"substrand-H2-2-7-forward","sequence_position":3,"parent_element_id":"seq-domain-strand-H2-2-forward-h2-o2","visual_x":54.93348503112793,"visual_y":183.219970703125,"grid_anchor_x":54.999120000000005,"grid_anchor_y":185.71992},{"stable_id":"tb-strandstrand_H3_0_forward-SubstrandTypeEnum.DOMAIN-substrand_H3_0_2_forward-h3-o1-l1-p1-fwd","strand_id":"strand-H3-0-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":1,"precise_offset":1,"forward":true,"sequence_element_id":"substrand-H3-0-2-forward","sequence_position":1,"parent_element_id":"seq-domain-strand-H3-0-forward-h3-o0","visual_x":14.778488159179688,"visual_y":273.5799560546875,"grid_anchor_x":14.999760000000002,"grid_anchor_y":276.07991999999996},{"stable_id":"tb-strandstrand_H3_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H3_2_4_forward-h3-o2-l0-p0-fwd","strand_id":"strand-H3-2-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":0,"precise_offset":0,"forward":true,"sequence_element_id":"substrand-H3-2-4-forward","sequence_position":0,"parent_element_id":"seq-domain-strand-H3-2-forward-h3-o2","visual_x":25.400869369506836,"visual_y":273.5799560546875,"grid_anchor_x":24.9996,"grid_anchor_y":276.07991999999996},{"stable_id":"tb-strandstrand_H4_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H4_2_4_forward-h4-o2-l0-p0-fwd","strand_id":"strand-H4-2-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":0,"precise_offset":0,"forward":true,"sequence_element_id":"substrand-H4-2-4-forward","sequence_position":0,"parent_element_id":"seq-domain-strand-H4-2-forward-h4-o2","visual_x":25.400869369506836,"visual_y":363.93994140625,"grid_anchor_x":24.9996,"grid_anchor_y":366.43992},{"stable_id":"tb-strandstrand_H4_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H4_2_4_forward-h4-o3-l1-p1-fwd","strand_id":"strand-H4-2-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":1,"precise_offset":1,"forward":true,"sequence_element_id":"substrand-H4-2-4-forward","sequence_position":1,"parent_element_id":"seq-domain-strand-H4-2-forward-h4-o2","visual_x":34.77816963195801,"visual_y":363.93994140625,"grid_anchor_x":34.99944000000001,"grid_anchor_y":366.43992},{"stable_id":"tb-strandstrand_H5_5_reverse-SubstrandTypeEnum.DOMAIN-substrand_H5_4_6_reverse-h5-o5-l0-p0-rev","strand_id":"strand-H5-5-reverse","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":0,"precise_offset":0,"forward":false,"sequence_element_id":"substrand-H5-4-6-reverse","sequence_position":0,"parent_element_id":"seq-domain-strand-H5-5-reverse-h5-o5","visual_x":54.59785128234864,"visual_y":469.2997153125,"grid_anchor_x":54.999120000000005,"grid_anchor_y":466.79976},{"stable_id":"tb-strandstrand_H5_5_reverse-SubstrandTypeEnum.DOMAIN-substrand_H5_4_6_reverse-h5-o4-l1-p1-rev","strand_id":"strand-H5-5-reverse","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":1,"precise_offset":1,"forward":false,"sequence_element_id":"substrand-H5-4-6-reverse","sequence_position":1,"parent_element_id":"seq-domain-strand-H5-5-reverse-h5-o5","visual_x":45.22055101989747,"visual_y":469.2997153125,"grid_anchor_x":44.999280000000006,"grid_anchor_y":466.79976},{"stable_id":"tb-strandstrand_H6_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H6_2_7_forward-h6-o3-l1-p1-fwd","strand_id":"strand-H6-2-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":1,"precise_offset":1,"forward":true,"sequence_element_id":"substrand-H6-2-7-forward","sequence_position":1,"parent_element_id":"seq-domain-strand-H6-2-forward-h6-o2","visual_x":35.245076179504395,"visual_y":544.659912109375,"grid_anchor_x":34.99944000000001,"grid_anchor_y":547.1599199999999},{"stable_id":"tb-strandstrand_H6_2_forward-SubstrandTypeEnum.DOMAIN-substrand_H6_2_7_forward-h6-o5-l3-p3-fwd","strand_id":"strand-H6-2-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":3,"precise_offset":3,"forward":true,"sequence_element_id":"substrand-H6-2-7-forward","sequence_position":3,"parent_element_id":"seq-domain-strand-H6-2-forward-h6-o2","visual_x":54.93348503112793,"visual_y":544.659912109375,"grid_anchor_x":54.999120000000005,"grid_anchor_y":547.1599199999999},{"stable_id":"tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o10-l0-p0-fwd","strand_id":"strand-H7-10-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":0,"precise_offset":0,"forward":true,"sequence_element_id":"substrand-H7-10-13-forward","sequence_position":0,"parent_element_id":"seq-domain-strand-H7-10-forward-h7-o10","visual_x":105.39958572387695,"visual_y":635.0198974609375,"grid_anchor_x":104.99832,"grid_anchor_y":637.51992},{"stable_id":"tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o11-l1-p1-fwd","strand_id":"strand-H7-10-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":1,"precise_offset":1,"forward":true,"sequence_element_id":"substrand-H7-10-13-forward","sequence_position":1,"parent_element_id":"seq-domain-strand-H7-10-forward-h7-o10","visual_x":115.08815383911133,"visual_y":635.0198974609375,"grid_anchor_x":114.99816000000001,"grid_anchor_y":637.51992},{"stable_id":"tb-strandstrand_H7_10_forward-SubstrandTypeEnum.DOMAIN-substrand_H7_10_13_forward-h7-o12-l2-p2-fwd","strand_id":"strand-H7-10-forward","substrand_type":"SubstrandTypeEnum.DOMAIN","logical_index":2,"precise_offset":2,"forward":true,"sequence_element_id":"substrand-H7-10-13-forward","sequence_position":2,"parent_element_id":"seq-domain-strand-H7-10-forward-h7-o10","visual_x":124.77672958374023,"visual_y":635.0198974609375,"grid_anchor_x":124.99800000000002,"grid_anchor_y":637.51992}]
-''';
-
-// Content of all test cases combined into a single design file.
-const String adjacentDomainTestCasesScContent = '''
-{
-  "version": "0.20.0",
-  "grid": "square",
-  "helices": [
-    {"grid_position": [0, 0], "max_offset": 64},
-    {"grid_position": [0, 1], "max_offset": 64},
-    {"grid_position": [0, 2], "max_offset": 64},
-    {"grid_position": [0, 3], "max_offset": 64},
-    {"grid_position": [0, 4], "max_offset": 64},
-    {"grid_position": [0, 5], "max_offset": 64},
-    {"grid_position": [0, 6], "max_offset": 64},
-    {"grid_position": [0, 7], "max_offset": 64}
-  ],
-  "strands": [
-    { "color": "#f74308", "sequence": "TT", "domains": [{"helix": 0, "forward": true, "start": 5, "end": 7}] },
-    { "color": "#57bb00", "sequence": "AA", "domains": [{"helix": 0, "forward": false, "start": 5, "end": 7}] },
-
-    { "color": "#f74308", "sequence": "TT", "domains": [{"helix": 1, "forward": false, "start": 2, "end": 4}] },
-    { "color": "#57bb00", "sequence": "AA", "domains": [{"helix": 1, "forward": true, "start": 2, "end": 4}] },
-
-    { "color": "#57bb00", "sequence": "CCTTG", "domains": [{"helix": 2, "forward": true, "start": 2, "end": 7}] },
-    { "color": "#f74308", "sequence": "CAAGG", "domains": [{"helix": 2, "forward": false, "start": 2, "end": 7}] },
-
-    { "color": "#cc0000", "sequence": "GT", "domains": [{"helix": 3, "forward": true, "start": 0, "end": 2}] },
-    { "color": "#32b86c", "sequence": "TC", "domains": [{"helix": 3, "forward": true, "start": 2, "end": 4}] },
-    { "color": "#007200", "sequence": "CAAG", "domains": [{"helix": 3, "forward": false, "start": 0, "end": 4}] },
-
-    { "color": "#f74308", "sequence": "TT", "domains": [{"helix": 4, "forward": true, "start": 2, "end": 4}] },
-
-    { "color": "#f74308", "sequence": "TT", "domains": [{"helix": 5, "forward": false, "start": 4, "end": 6}] },
-
-    { "color": "#f74308", "sequence": "CAGAG", "domains": [{"helix": 6, "forward": false, "start": 2, "end": 7}] },
-    { "color": "#57bb00", "sequence": "CTCTG", "domains": [{"helix": 6, "forward": true, "start": 2, "end": 7}] },
-
-    { "color": "#f74308", "sequence": "TTT", "domains": [{"helix": 7, "forward": true, "start": 10, "end": 13}]},
-    { "color": "#57bb00", "sequence": "AAA", "domains": [{"helix": 7, "forward": false, "start": 10, "end": 13}]}
-  ]
-}
-''';
-
 void main() {
   group('CPD Rule Tests - Adjacent Domain Double Strand', () {
     late Design design;
@@ -91,7 +37,20 @@ void main() {
     late List<ExpectedCPDSite> expected_sites;
     late Set<String> expected_t_location_ids;
 
-    setUpAll(() {
+    setUpAll(() async {
+      String adjacentDomainTestCasesScContent = await util.get_text_file_content(
+        '../tests_inputs/cpd_detection/adjacent_domain_design.sc',
+      );
+      String identifiedTBasesJsonLog = await util.get_text_file_content(
+        '../tests_inputs/cpd_detection/adjacent_domain_identified_t_bases.json',
+      );
+      String cpdSitesJsonLog = await util.get_text_file_content(
+        '../tests_inputs/cpd_detection/adjacent_domain_expected_cpd_sites.json',
+      );
+      String tBaseLocationsJsonLog = await util.get_text_file_content(
+        '../tests_inputs/cpd_detection/adjacent_domain_expected_t_base_locations.json',
+      );
+
       design = Design.from_json_str(adjacentDomainTestCasesScContent, false)!;
 
       if (identifiedTBasesJsonLog.trim().isNotEmpty) {
@@ -137,11 +96,6 @@ void main() {
     });
 
     test('adjacentDomainDoubleStrandRule processes test cases correctly', () {
-      if (identifiedTBasesJsonLog.trim().isEmpty) {
-        print("Skipping test: Log data is not provided yet.");
-        return;
-      }
-
       RuleDefinition rule = allRuleDefinitions.firstWhere(
         (r) => r.ruleName == "adjacentDomainDoubleStrandRule",
         orElse: () => throw StateError('adjacentDomainDoubleStrandRule not found'),

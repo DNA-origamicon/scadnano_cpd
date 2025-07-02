@@ -1,0 +1,47 @@
+[
+    {
+        "t1_stable_id": "tb-strandstrand_H1_4_forward-_$Extension-extension_5p_strand_H1_4_forward-hna-ona-l1-p1-fwd",
+        "t2_stable_id": "tb-strandstrand_H1_1_forward-_$Loopout-loopout_1_strand_H1_1_forward-hna-ona-l6-p3-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H1_4_forward-_$Extension-extension_5p_strand_H1_4_forward-hna-ona-l3-p3-fwd",
+        "t2_stable_id": "tb-strandstrand_H1_1_forward-_$Loopout-loopout_1_strand_H1_1_forward-hna-ona-l4-p1-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H1_4_forward-_$Extension-extension_3p_strand_H1_4_forward-hna-ona-l9-p0-fwd",
+        "t2_stable_id": "tb-strandstrand_H0_10_reverse-_$Loopout-loopout_1_strand_H0_10_reverse-hna-ona-l5-p2-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H0_29_forward-_$Extension-extension_5p_strand_H0_29_forward-hna-ona-l0-p0-fwd",
+        "t2_stable_id": "tb-strandstrand_H0_26_forward-_$Loopout-loopout_1_strand_H0_26_forward-hna-ona-l3-p0-fwd",
+        "is_conflicted": true
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H0_29_forward-_$Extension-extension_3p_strand_H0_29_forward-hna-ona-l7-p0-fwd",
+        "t2_stable_id": "tb-strandstrand_H1_36_reverse-_$Loopout-loopout_1_strand_H1_36_reverse-hna-ona-l5-p3-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H1_34_reverse-_$Extension-extension_5p_strand_H1_34_reverse-hna-ona-l1-p1-fwd",
+        "t2_stable_id": "tb-strandstrand_H1_36_reverse-_$Loopout-loopout_1_strand_H1_36_reverse-hna-ona-l3-p1-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H1_34_reverse-_$Extension-extension_3p_strand_H1_34_reverse-hna-ona-l10-p1-fwd",
+        "t2_stable_id": "tb-strandstrand_H0_26_forward-_$Loopout-loopout_1_strand_H0_26_forward-hna-ona-l3-p0-fwd",
+        "is_conflicted": true
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H0_20_reverse-_$Extension-extension_5p_strand_H0_20_reverse-hna-ona-l0-p0-fwd",
+        "t2_stable_id": "tb-strandstrand_H0_23_reverse-_$Loopout-loopout_1_strand_H0_23_reverse-hna-ona-l5-p2-fwd",
+        "is_conflicted": false
+    },
+    {
+        "t1_stable_id": "tb-strandstrand_H0_20_reverse-_$Extension-extension_3p_strand_H0_20_reverse-hna-ona-l10-p2-fwd",
+        "t2_stable_id": "tb-strandstrand_H1_13_forward-_$Loopout-loopout_1_strand_H1_13_forward-hna-ona-l3-p0-fwd",
+        "is_conflicted": false
+    }
+]
