@@ -2,8 +2,8 @@
   "version": "0.20.0",
   "grid": "square",
   "helices": [
-    {"grid_position": [0, 0], "max_offset": 64},
-    {"grid_position": [0, 1], "max_offset": 64}
+    {"grid_position": [0, 0], "max_offset": 24},
+    {"grid_position": [0, 1], "max_offset": 24}
   ],
   "strands": [
     {
@@ -95,6 +95,20 @@
       "sequence": "CAAGG",
       "domains": [
         {"helix": 0, "forward": false, "start": 8, "end": 13}
+      ]
+    },
+    {
+      "color": "#57bb00",
+      "sequence": "CTTTG",
+      "domains": [
+        {"helix": 0, "forward": true, "start": 15, "end": 20}
+      ]
+    },
+    {
+      "color": "#f74308",
+      "sequence": "CAAAG",
+      "domains": [
+        {"helix": 0, "forward": false, "start": 15, "end": 20}
       ]
     }
   ]
