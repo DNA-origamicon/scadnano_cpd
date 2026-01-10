@@ -1,4 +1,4 @@
-# CPD Site Detection Feature
+# CPD Site Detection Feature Overview
 
 This feature enables Scadnano to identify and visualize individual thymine (T) bases in DNA sequences and potential Cyclobutane Pyrimidine Dimer (CPD) formation sites. These CPD sites form between T bases under specific structural conditions, which the feature detects using declarative rules. 
 
