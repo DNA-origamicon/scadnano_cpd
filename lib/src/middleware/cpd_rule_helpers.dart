@@ -1,6 +1,6 @@
 import 'dart:math'; // For Point and max()
 
-import 'package:tuple/tuple.dart'; // For Tuple3 used in RuleProcessor return type hint
+import 'package:tuple/tuple.dart'; // For Tuple2 used in occupied_coords map
 import 'package:built_collection/built_collection.dart';
 
 import '../state/strand.dart';
@@ -9,6 +9,7 @@ import '../state/domain.dart';
 import '../state/extension.dart';
 import '../state/loopout.dart';
 import '../state/cpd_site.dart';
+import '../state/cpd_parameters.dart';
 import '../state/t_base_location.dart';
 import '../state/design.dart';
 
@@ -188,13 +189,119 @@ class RuleDefinition {
   final List<PairCondition> pair_conditions;
   final double score;
 
+  /// The photoproduct this rule produces (e.g. "TT_CPD").
+  final String photoproduct_id;
+
+  /// The structural context key matching cpd_parameters.json
+  /// (e.g. "extension_extension", "adjacent_domain_ds").
+  final String structural_context_key;
+
   RuleDefinition({
     required this.ruleName,
     required this.t1_conditions,
     required this.t2_conditions,
     required this.pair_conditions,
     required this.score,
+    this.photoproduct_id = 'TT_CPD',
+    this.structural_context_key = '',
   });
+}
+
+/// A candidate CPD pair produced by the rule engine, carrying the full context
+/// needed to populate a CPDSite.
+class CpdCandidate {
+  final TBaseData t1;
+  final TBaseData t2;
+  final double score;
+  final String photoproduct_id;
+  final String structural_context_key;
+
+  CpdCandidate({
+    required this.t1,
+    required this.t2,
+    required this.score,
+    required this.photoproduct_id,
+    required this.structural_context_key,
+  });
+}
+
+/// Builds rule definitions from [params], computing scores from the
+/// sequence-context rates and structural-context weights.
+///
+/// One rule instance is created per (enabled photoproduct × structural context)
+/// combination. The score for each rule is:
+///   relative_formation_rate × structural_weight
+///
+/// [upstream_base] and [downstream_base] default to "T"/"T" since the current
+/// detector only tags thymine bases.
+List<RuleDefinition> build_rule_definitions(CpdParameters params,
+    {String upstream_base = 'T', String downstream_base = 'T'}) {
+  final rules = <RuleDefinition>[];
+  for (final pp in params.enabled_photoproducts) {
+    final seq_rate = pp.sequence_context_rate(upstream_base, downstream_base);
+
+    rules.add(RuleDefinition(
+      ruleName: 'AdjacentPerfectlyAlignedExtensions',
+      photoproduct_id: pp.id,
+      structural_context_key: 'extension_extension',
+      t1_conditions: [IsOnExtensionCondition()],
+      t2_conditions: [IsOnExtensionCondition()],
+      pair_conditions: [
+        AreNotOnSameStrandCondition(),
+        AreOnSameHelixCondition(),
+        AreParentDomainsSameDirectionCondition(),
+        AdjacentExtensionsAlignedPairCondition(),
+      ],
+      score: seq_rate * pp.structural_weight('extension_extension'),
+    ));
+
+    rules.add(RuleDefinition(
+      ruleName: 'AdjacentPerfectlyAlignedLoopouts',
+      photoproduct_id: pp.id,
+      structural_context_key: 'loopout_loopout',
+      t1_conditions: [IsOnLoopoutCondition()],
+      t2_conditions: [IsOnLoopoutCondition()],
+      pair_conditions: [
+        AreNotOnSameStrandCondition(),
+        AdjacentLoopoutsAlignedPairCondition(),
+      ],
+      score: seq_rate * pp.structural_weight('loopout_loopout'),
+    ));
+
+    rules.add(RuleDefinition(
+      ruleName: 'AdjacentExtensionLoopoutPerfectlyAligned',
+      photoproduct_id: pp.id,
+      structural_context_key: 'extension_loopout',
+      t1_conditions: [],
+      t2_conditions: [],
+      pair_conditions: [
+        AreNotOnSameStrandCondition(),
+        AdjacentExtensionLoopoutAlignedPairCondition(),
+      ],
+      score: seq_rate * pp.structural_weight('extension_loopout'),
+    ));
+
+    rules.add(RuleDefinition(
+      ruleName: 'adjacentDomainDoubleStrandRule',
+      photoproduct_id: pp.id,
+      structural_context_key: 'adjacent_domain_ds',
+      t1_conditions: [IsOnDomainCondition(), IsOnDoubleStrandedDomainCondition(), IsNotInInsertionCondition()],
+      t2_conditions: [IsOnDomainCondition(), IsOnDoubleStrandedDomainCondition(), IsNotInInsertionCondition()],
+      pair_conditions: [AreImmediateNeighborsOnSameDomainCondition()],
+      score: seq_rate * pp.structural_weight('adjacent_domain_ds'),
+    ));
+
+    rules.add(RuleDefinition(
+      ruleName: 'WithinLoopoutAdjacent',
+      photoproduct_id: pp.id,
+      structural_context_key: 'within_loopout',
+      t1_conditions: [IsOnLoopoutCondition()],
+      t2_conditions: [IsOnLoopoutCondition()],
+      pair_conditions: [AreImmediateNeighborsOnSameDomainCondition()],
+      score: seq_rate * pp.structural_weight('within_loopout'),
+    ));
+  }
+  return rules;
 }
 
 // --- Concrete Conditions Implementations ---
@@ -491,6 +598,8 @@ class AreOnSameHelixCondition implements PairCondition {
 
 final adjacentExtensionRule = RuleDefinition(
   ruleName: "AdjacentPerfectlyAlignedExtensions",
+  photoproduct_id: "TT_CPD",
+  structural_context_key: "extension_extension",
   t1_conditions: [IsOnExtensionCondition()],
   t2_conditions: [IsOnExtensionCondition()],
   pair_conditions: [
@@ -499,45 +608,64 @@ final adjacentExtensionRule = RuleDefinition(
     AreParentDomainsSameDirectionCondition(),
     AdjacentExtensionsAlignedPairCondition(),
   ],
-  score: 1.0, // Initial score
+  score: 1.0,
 );
 
 final adjacentLoopoutRule = RuleDefinition(
   ruleName: "AdjacentPerfectlyAlignedLoopouts",
+  photoproduct_id: "TT_CPD",
+  structural_context_key: "loopout_loopout",
   t1_conditions: [IsOnLoopoutCondition()],
   t2_conditions: [IsOnLoopoutCondition()],
   pair_conditions: [
     AreNotOnSameStrandCondition(),
     AdjacentLoopoutsAlignedPairCondition(),
   ],
-  score: 1.0, // Initial score
+  score: 1.0,
 );
 
 final extensionLoopoutRule = RuleDefinition(
   ruleName: "AdjacentExtensionLoopoutPerfectlyAligned",
-  t1_conditions: [], // Will be handled by the PairCondition determining Ext vs Loopout
-  t2_conditions: [], // Will be handled by the PairCondition
+  photoproduct_id: "TT_CPD",
+  structural_context_key: "extension_loopout",
+  t1_conditions: [],
+  t2_conditions: [],
   pair_conditions: [
     AreNotOnSameStrandCondition(),
     AdjacentExtensionLoopoutAlignedPairCondition(),
   ],
-  score: 1.0, // Initial score
+  score: 1.0,
 );
 
 final adjacentDomainDoubleStrandRule = RuleDefinition(
   ruleName: "adjacentDomainDoubleStrandRule",
+  photoproduct_id: "TT_CPD",
+  structural_context_key: "adjacent_domain_ds",
   t1_conditions: [IsOnDomainCondition(), IsOnDoubleStrandedDomainCondition(), IsNotInInsertionCondition()],
   t2_conditions: [IsOnDomainCondition(), IsOnDoubleStrandedDomainCondition(), IsNotInInsertionCondition()],
-  pair_conditions: [
-    AreImmediateNeighborsOnSameDomainCondition()
-  ],
+  pair_conditions: [AreImmediateNeighborsOnSameDomainCondition()],
   score: 1.0,
 );
 
-// List of all active rules - EXPORTED
+// Detects adjacent T-T pairs within a single loopout (same strand, same loopout).
+// Used for thymine loopouts engineered as CPD sites.
+final withinLoopoutAdjacentRule = RuleDefinition(
+  ruleName: "WithinLoopoutAdjacent",
+  photoproduct_id: "TT_CPD",
+  structural_context_key: "within_loopout",
+  t1_conditions: [IsOnLoopoutCondition()],
+  t2_conditions: [IsOnLoopoutCondition()],
+  pair_conditions: [AreImmediateNeighborsOnSameDomainCondition()],
+  score: 1.0,
+);
+
+// List of all active rules with hardcoded scores — used as fallback when no
+// CpdParameters are available. Use build_rule_definitions(params) instead when
+// parameters have been loaded from cpd_parameters.json.
 final allRuleDefinitions = [
   adjacentExtensionRule,
   adjacentLoopoutRule,
+  withinLoopoutAdjacentRule,
   extensionLoopoutRule,
   adjacentDomainDoubleStrandRule,
 ];
@@ -581,9 +709,9 @@ class CPDDetectionOutput {
 }
 
 List<CPDSite> process_cpd_candidates(
-    List<Tuple3<TBaseData, TBaseData, double>> candidates, List<TBaseData> all_t_base_data) {
+    List<CpdCandidate> candidates, List<TBaseData> all_t_base_data) {
   // Sort candidates by score, descending.
-  candidates.sort((a, b) => b.item3.compareTo(a.item3));
+  candidates.sort((a, b) => b.score.compareTo(a.score));
 
   List<CPDSite> final_cpd_sites = [];
   Set<String> t_bases_already_in_a_final_site = {};
@@ -615,8 +743,8 @@ List<CPDSite> process_cpd_candidates(
   }
 
   for (var candidate in candidates) {
-    TBaseData t1_data = candidate.item1;
-    TBaseData t2_data = candidate.item2;
+    TBaseData t1_data = candidate.t1;
+    TBaseData t2_data = candidate.t2;
 
     String t1_id = t1_data.stable_id;
     String t2_id = t2_data.stable_id;
@@ -655,7 +783,13 @@ List<CPDSite> process_cpd_candidates(
     TBaseLocation t1_loc = getLocation(t1_data);
     TBaseLocation t2_loc = getLocation(t2_data);
 
-    CPDSite new_site = CPDSite(t1: t1_loc, t2: t2_loc, is_conflicted: this_new_site_is_conflicted);
+    CPDSite new_site = CPDSite(
+      t1: t1_loc,
+      t2: t2_loc,
+      is_conflicted: this_new_site_is_conflicted,
+      photoproduct_id: candidate.photoproduct_id,
+      formation_score: candidate.score,
+    );
     final_cpd_sites.add(new_site);
 
     // Update tracking information
@@ -668,8 +802,16 @@ List<CPDSite> process_cpd_candidates(
   return final_cpd_sites;
 }
 
+/// Detects CPD sites from a list of identified T-bases.
+///
+/// [params]: when provided, scores are computed from the parameter file via
+/// [build_rule_definitions]. Pass `null` (or omit) to use [allRuleDefinitions]
+/// with hardcoded scores of 1.0.
+///
+/// [rules_to_process]: explicit rule list, used only when [params] is null.
+/// Primarily for unit tests that supply a single rule for isolation.
 CPDDetectionOutput detect_cpd_sites_from_t_bases(Design design, List<IdentifiedTBase> identified_t_bases,
-    [List<RuleDefinition>? rules_to_process]) {
+    [List<RuleDefinition>? rules_to_process, CpdParameters? params]) {
   List<TBaseData> populated_t_base_data_list = [];
 
   // Pre-calculate all occupied helix coordinates to efficiently check for double-strandedness.
@@ -863,8 +1005,13 @@ CPDDetectionOutput detect_cpd_sites_from_t_bases(Design design, List<IdentifiedT
     }
   }
 
-  List<RuleDefinition> rules = rules_to_process ?? allRuleDefinitions;
-  List<Tuple3<TBaseData, TBaseData, double>> candidate_pairs =
+  List<RuleDefinition> rules;
+  if (params != null) {
+    rules = build_rule_definitions(params);
+  } else {
+    rules = rules_to_process ?? allRuleDefinitions;
+  }
+  List<CpdCandidate> candidate_pairs =
       RuleProcessor().process_rules(populated_t_base_data_list, rules);
 
   List<CPDSite> final_cpd_sites_list = process_cpd_candidates(candidate_pairs, populated_t_base_data_list);
@@ -896,9 +1043,9 @@ CPDDetectionOutput detect_cpd_sites_from_t_bases(Design design, List<IdentifiedT
 /// Processes rule definitions against TBaseData to find candidate CPD pairs.
 class RuleProcessor {
   /// Takes T-base data and rule definitions, returns scored candidate pairs.
-  List<Tuple3<TBaseData, TBaseData, double>> process_rules(
+  List<CpdCandidate> process_rules(
       List<TBaseData> t_bases, List<RuleDefinition> rules) {
-    List<Tuple3<TBaseData, TBaseData, double>> all_candidates = [];
+    List<CpdCandidate> all_candidates = [];
 
     var extensions = <TBaseData>[];
     var loopouts = <TBaseData>[];
@@ -910,7 +1057,7 @@ class RuleProcessor {
     }
 
     for (var rule in rules) {
-      List<Tuple3<TBaseData, TBaseData, double>> rule_candidates = [];
+      List<CpdCandidate> rule_candidates = [];
 
       if (rule.ruleName == "AdjacentPerfectlyAlignedExtensions") {
         if (extensions.length < 2) continue;
@@ -918,8 +1065,12 @@ class RuleProcessor {
           TBaseData t1 = extensions[i];
           for (int j = i + 1; j < extensions.length; ++j) {
             TBaseData t2 = extensions[j];
-            if (_evaluate_rule_for_pair(rule, t1, t2)) {
-              rule_candidates.add(Tuple3(t1, t2, rule.score));
+            double? score = _evaluate_rule_for_pair(rule, t1, t2);
+            if (score != null) {
+              rule_candidates.add(CpdCandidate(
+                  t1: t1, t2: t2, score: score,
+                  photoproduct_id: rule.photoproduct_id,
+                  structural_context_key: rule.structural_context_key));
             }
           }
         }
@@ -929,8 +1080,12 @@ class RuleProcessor {
           TBaseData t1 = loopouts[i];
           for (int j = i + 1; j < loopouts.length; ++j) {
             TBaseData t2 = loopouts[j];
-            if (_evaluate_rule_for_pair(rule, t1, t2)) {
-              rule_candidates.add(Tuple3(t1, t2, rule.score));
+            double? score = _evaluate_rule_for_pair(rule, t1, t2);
+            if (score != null) {
+              rule_candidates.add(CpdCandidate(
+                  t1: t1, t2: t2, score: score,
+                  photoproduct_id: rule.photoproduct_id,
+                  structural_context_key: rule.structural_context_key));
             }
           }
         }
@@ -938,8 +1093,37 @@ class RuleProcessor {
         if (extensions.isEmpty || loopouts.isEmpty) continue;
         for (TBaseData t_ext in extensions) {
           for (TBaseData t_loop in loopouts) {
-            if (_evaluate_rule_for_pair(rule, t_ext, t_loop)) {
-              rule_candidates.add(Tuple3(t_ext, t_loop, rule.score));
+            double? score = _evaluate_rule_for_pair(rule, t_ext, t_loop);
+            if (score != null) {
+              rule_candidates.add(CpdCandidate(
+                  t1: t_ext, t2: t_loop, score: score,
+                  photoproduct_id: rule.photoproduct_id,
+                  structural_context_key: rule.structural_context_key));
+            }
+          }
+        }
+      } else if (rule.ruleName == "WithinLoopoutAdjacent") {
+        if (loopouts.length < 2) continue;
+
+        // Group loopout T's by their substrand object; check adjacent pairs on the same loopout
+        var t_bases_by_substrand = <Substrand, List<TBaseData>>{};
+        for (var t_base in loopouts) {
+          t_bases_by_substrand.putIfAbsent(t_base.substrand_object, () => []).add(t_base);
+        }
+
+        for (var group in t_bases_by_substrand.values) {
+          if (group.length < 2) continue;
+          group.sort((a, b) => a.idx_in_substrand.compareTo(b.idx_in_substrand));
+
+          for (int i = 0; i < group.length - 1; i++) {
+            TBaseData t1 = group[i];
+            TBaseData t2 = group[i + 1];
+            double? score = _evaluate_rule_for_pair(rule, t1, t2);
+            if (score != null) {
+              rule_candidates.add(CpdCandidate(
+                  t1: t1, t2: t2, score: score,
+                  photoproduct_id: rule.photoproduct_id,
+                  structural_context_key: rule.structural_context_key));
             }
           }
         }
@@ -964,8 +1148,12 @@ class RuleProcessor {
             // The pair is guaranteed to be on the same strand and domain.
             // The AreImmediateNeighborsOnSameDomainCondition will check if they are truly adjacent.
             // Other conditions (double-stranded, not-in-insertion) are checked on each T-base.
-            if (_evaluate_rule_for_pair(rule, t1, t2)) {
-              rule_candidates.add(Tuple3(t1, t2, rule.score));
+            double? score = _evaluate_rule_for_pair(rule, t1, t2);
+            if (score != null) {
+              rule_candidates.add(CpdCandidate(
+                  t1: t1, t2: t2, score: score,
+                  photoproduct_id: rule.photoproduct_id,
+                  structural_context_key: rule.structural_context_key));
             }
           }
         }
@@ -974,17 +1162,18 @@ class RuleProcessor {
       }
       all_candidates.addAll(rule_candidates);
     }
-    
+
     return all_candidates;
   }
 
-  bool _evaluate_rule_for_pair(RuleDefinition rule, TBaseData t1, TBaseData t2) {
+  /// Returns the rule's score if all conditions pass, null otherwise.
+  double? _evaluate_rule_for_pair(RuleDefinition rule, TBaseData t1, TBaseData t2) {
     bool t1_ok = rule.t1_conditions.every((cond) => cond.evaluate(t1));
-    if (!t1_ok) return false;
+    if (!t1_ok) return null;
     bool t2_ok = rule.t2_conditions.every((cond) => cond.evaluate(t2));
-    if (!t2_ok) return false;
+    if (!t2_ok) return null;
     bool pair_ok = rule.pair_conditions.every((cond) => cond.evaluate(t1, t2));
-    return pair_ok;
+    return pair_ok ? rule.score : null;
   }
 }
 

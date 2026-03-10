@@ -1,0 +1,156 @@
+{
+  "schema_version": "0.1.0",
+  "last_updated": "2026-03-08",
+  "notes": "Structural context weights set to equal (1.0) for all TT_CPD scenarios pending experimental differentiation. Rationale: insufficient in vitro or in silico data to distinguish formation rates between structural contexts (adjacent-domain, extension, loopout). All T-T pairs treated as equally likely to form CPDs regardless of junction geometry. Update weights and increment schema_version minor digit when experimental data become available. See cpd/VALIDATION_GUIDE_PHASE0.md for the update protocol.",
+
+  "global": {
+    "display_threshold": 0.1,
+    "conflict_resolution": "highest_score_wins",
+    "watch_bases": ["T"],
+    "notes": "watch_bases controls which bases are tagged in the SVG during rendering. Extend to [\"T\", \"C\"] when TC-6-4PP detection is enabled."
+  },
+
+  "photoproducts": [
+    {
+      "id": "TT_CPD",
+      "display_name": "T-T Cyclobutane Pyrimidine Dimer",
+      "abbreviation": "CPD",
+      "color": "#e87d2b",
+      "enabled": true,
+      "notes": "Primary UV photoproduct in DNA origami. All structural context weights set to 1.0 (equal) pending experimental differentiation — two thymines adjacent on the same strand or unpaired and adjacent on opposite strands are treated as equally likely CPD candidates regardless of structural context.",
+      "sequence_contexts": [
+        {
+          "upstream_base": "T",
+          "downstream_base": "T",
+          "relative_formation_rate": 1,
+          "notes": "TT step is the canonical CPD substrate. Rate normalized to 1.0 as the reference."
+        }
+      ],
+      "structural_context_weights": {
+        "adjacent_domain_ds": {
+          "weight": 0.5,
+          "notes": "Equal weight — T-T adjacent on the same strand within a double-stranded domain. Weight will be differentiated from other contexts once experimental data are available."
+        },
+        "extension_extension": {
+          "weight": 1.0,
+          "notes": "Equal weight — T-T on paired extensions (unpaired, adjacent on opposite strands at a crossover junction)."
+        },
+        "loopout_loopout": {
+          "weight": 1.0,
+          "notes": "T-T on paired loopouts from different strands (unpaired, adjacent on opposite strands at a crossover junction)."
+        },
+        "within_loopout": {
+          "weight": 0.75,
+          "notes": "T-T adjacent within a single thymine loopout (same strand, single-stranded loop). Placeholder — set to equal weight pending experimental data distinguishing within-loopout from cross-strand loopout geometry."
+        },
+        "extension_loopout": {
+          "weight": 1.0,
+          "notes": "Equal weight — T-T on a mixed extension-loopout pair (unpaired, adjacent on opposite strands at a crossover junction)."
+        }
+      },
+      "geometry": {
+        "max_interbase_distance_angstrom": 4.0,
+        "notes": "Approximate C5-C5 distance threshold for CPD formation. Standard B-form stacking places adjacent bases ~3.4 Angstrom apart. Threshold allows for thermal fluctuation."
+      },
+      "references": [
+        "Schreier et al. (2007) Science 315:625 — direct observation of CPD formation dynamics",
+        "Douki & Cadet (2001) Biochemistry 40:2495 — sequence-context CPD quantum yields",
+        "Ravanat et al. (2001) J Photochem Photobiol B 63:88 — structural determinants of CPD formation"
+      ]
+    },
+
+    {
+      "id": "TT_64PP",
+      "display_name": "T-T 6-4 Photoproduct",
+      "abbreviation": "6-4PP",
+      "color": "#7b52ab",
+      "enabled": false,
+      "notes": "Disabled pending experimental validation of structural weights in DNA origami contexts. TT-6-4PP is a significant photoproduct (~25% relative to TT-CPD in B-form DNA) but its formation geometry in non-canonical structural contexts (extensions, loopouts) is uncharacterized. Enable and update weights once in silico or in vitro data are available.",
+      "sequence_contexts": [
+        {
+          "upstream_base": "T",
+          "downstream_base": "T",
+          "relative_formation_rate": 0.25,
+          "notes": "Approximate relative rate vs TT-CPD in B-form DNA. Placeholder only; update with experimental data."
+        }
+      ],
+      "structural_context_weights": {
+        "adjacent_domain_ds": {
+          "weight": 0.25,
+          "notes": "Placeholder. Scaled from B-form relative rate; structural context adjustment unknown."
+        },
+        "extension_extension": {
+          "weight": 0.30,
+          "notes": "Placeholder."
+        },
+        "loopout_loopout": {
+          "weight": 0.28,
+          "notes": "Placeholder."
+        },
+        "within_loopout": {
+          "weight": 0.28,
+          "notes": "Placeholder."
+        },
+        "extension_loopout": {
+          "weight": 0.20,
+          "notes": "Placeholder."
+        }
+      },
+      "geometry": {
+        "max_interbase_distance_angstrom": 4.0,
+        "notes": "6-4PP has distinct geometry from CPD; this threshold may need to differ. Update when structural data available."
+      },
+      "references": [
+        "Douki & Cadet (2001) Biochemistry 40:2495 — TT 6-4PP quantum yield relative to CPD",
+        "Kim & Sancar (1991) Biochemistry 30:8623 — 6-4PP structure and formation mechanism"
+      ]
+    },
+
+    {
+      "id": "TC_64PP",
+      "display_name": "T-C 6-4 Photoproduct",
+      "abbreviation": "TC-6-4PP",
+      "color": "#2b7de8",
+      "enabled": false,
+      "notes": "Disabled. Requires extension of base detection to include C (watch_bases must add 'C'). TC-6-4PP is a documented photoproduct but less frequent than TT variants. All weights are placeholders.",
+      "sequence_contexts": [
+        {
+          "upstream_base": "T",
+          "downstream_base": "C",
+          "relative_formation_rate": 0.15,
+          "notes": "Placeholder relative rate vs TT-CPD. Update with experimental data."
+        }
+      ],
+      "structural_context_weights": {
+        "adjacent_domain_ds": {
+          "weight": 0.15,
+          "notes": "Placeholder."
+        },
+        "extension_extension": {
+          "weight": 0.18,
+          "notes": "Placeholder."
+        },
+        "loopout_loopout": {
+          "weight": 0.16,
+          "notes": "Placeholder."
+        },
+        "within_loopout": {
+          "weight": 0.16,
+          "notes": "Placeholder."
+        },
+        "extension_loopout": {
+          "weight": 0.12,
+          "notes": "Placeholder."
+        }
+      },
+      "geometry": {
+        "max_interbase_distance_angstrom": 4.0,
+        "notes": "Placeholder. TC-6-4PP geometry may differ from TT variants."
+      },
+      "references": [
+        "Douki & Cadet (2001) Biochemistry 40:2495 — TC 6-4PP vs TT-CPD relative yields",
+        "Perdiz et al. (2000) J Biol Chem 275:26732 — wavelength dependence of TC vs TT photoproducts"
+      ]
+    }
+  ]
+}

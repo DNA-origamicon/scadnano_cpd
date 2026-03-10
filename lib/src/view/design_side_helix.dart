@@ -127,7 +127,20 @@ backbone angles at current slice bar offset = ${props.slice_bar_offset}:
 
     return (Dom.g()
       ..transform = 'translate(${center.x} ${center.y})'
-      ..id = group_id())(children);
+      ..id = group_id()
+      ..onContextMenu = ((ev) {
+        if (!ev.shiftKey) {
+          ev.preventDefault();
+          app.dispatch(
+            actions.ContextMenuShow(
+              context_menu: ContextMenu(
+                items: context_menu_helix(props.helix, props.helix_change_apply_to_all),
+                position: util.from_point_num(ev.nativeEvent.page),
+              ),
+            ),
+          );
+        }
+      }))(children);
   }
 
   String helix_circle_id() => 'side-view-helix-circle-${props.helix.idx}';
@@ -135,44 +148,6 @@ backbone angles at current slice bar offset = ${props.slice_bar_offset}:
   String helix_text_id() => 'side-view-helix-text-${props.helix.idx}';
 
   String group_id() => 'helix-side-view-${props.helix.idx}';
-
-  // needed for capturing right-click events with React:
-  // https://medium.com/@ericclemmons/react-event-preventdefault-78c28c950e46
-  @override
-  componentDidMount() {
-    var elt = querySelector('#${group_id()}');
-    if (elt != null) {
-      elt.addEventListener('contextmenu', on_context_menu);
-    } else {
-      print('WARNING: no element found on page with group ID = ${group_id()}');
-    }
-  }
-
-  @override
-  componentWillUnmount() {
-    var elt = querySelector('#${group_id()}');
-    if (elt != null) {
-      elt.removeEventListener('contextmenu', on_context_menu);
-    } else {
-      print('WARNING: no element found on page with group ID = ${group_id()}');
-    }
-    super.componentWillUnmount();
-  }
-
-  on_context_menu(Event ev) {
-    MouseEvent event = ev as MouseEvent;
-    if (!event.shiftKey) {
-      event.preventDefault();
-      app.dispatch(
-        actions.ContextMenuShow(
-          context_menu: ContextMenu(
-            items: context_menu_helix(props.helix, props.helix_change_apply_to_all),
-            position: util.from_point_num(event.page),
-          ),
-        ),
-      );
-    }
-  }
 
   _handle_click(SyntheticMouseEvent event, Helix helix) {
     if (props.edit_modes.contains(EditModeChoice.pencil)) {

@@ -95,6 +95,25 @@ class DesignMainDomainComponent extends UiComponent2<DesignMainDomainProps> with
       ..onMouseMove = ((event) => util.update_mouseover(event, props.helix, props.helix_svg_position))
       ..onPointerDown = handle_click_down
       ..onPointerUp = handle_click_up
+      ..onContextMenu = ((ev) {
+        if (!ev.shiftKey) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          Address address = util.get_address_on_helix(
+            ev.nativeEvent,
+            props.helix,
+            props.groups[props.helix.group]!,
+            props.geometry,
+            props.helix_svg_position,
+          );
+          var items = props.context_menu_strand(props.strand, domain: props.domain, address: address).build();
+          app.dispatch(
+            actions.ContextMenuShow(
+              context_menu: ContextMenu(items: items, position: util.from_point_num(ev.nativeEvent.page)),
+            ),
+          );
+        }
+      })
       ..stroke = color.toHexColor().toCssString()
       ..transform = props.transform
       ..x1 = '${start_svg.x}'
@@ -176,41 +195,6 @@ class DesignMainDomainComponent extends UiComponent2<DesignMainDomainProps> with
     }
   }
 
-  // needed for capturing right-click events with React:
-  // https://medium.com/@ericclemmons/react-event-preventdefault-78c28c950e46
-  @override
-  componentDidMount() {
-    var element = querySelector('#${props.domain.id}')!;
-    element.addEventListener('contextmenu', on_context_menu);
-  }
-
-  @override
-  componentWillUnmount() {
-    var element = querySelector('#${props.domain.id}')!;
-    element.removeEventListener('contextmenu', on_context_menu);
-    super.componentWillUnmount();
-  }
-
-  on_context_menu(Event ev) {
-    MouseEvent event = ev as MouseEvent;
-    if (!event.shiftKey) {
-      event.preventDefault();
-      event.stopPropagation();
-      Address address = util.get_address_on_helix(
-        event,
-        props.helix,
-        props.groups[props.helix.group]!,
-        props.geometry,
-        props.helix_svg_position,
-      );
-      var items = props.context_menu_strand(props.strand, domain: props.domain, address: address).build();
-      app.dispatch(
-        actions.ContextMenuShow(
-          context_menu: ContextMenu(items: items, position: util.from_point_num(event.page)),
-        ),
-      );
-    }
-  }
 }
 
 tooltip_text(Domain domain) =>

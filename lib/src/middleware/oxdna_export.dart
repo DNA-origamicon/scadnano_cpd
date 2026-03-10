@@ -40,8 +40,16 @@ First select some strands, or choose Export🡒oxDNA to export all strands in th
       strands_to_export = state.design.strands.toList();
     }
 
+    double fwd_x_offset = state.ui_state.loopout_fwd_x_offset;
+    double rev_x_offset = state.ui_state.loopout_rev_x_offset;
+    double fwd_z_offset = state.ui_state.loopout_fwd_z_offset;
+    double rev_z_offset = state.ui_state.loopout_rev_z_offset;
+    double fwd_theta = state.ui_state.loopout_fwd_theta;
+    double rev_theta = state.ui_state.loopout_rev_theta;
+
     if (action is actions.OxdnaExport) {
-      Tuple2<String, String> dat_top = to_oxdna_format(state.design, strands_to_export);
+      Tuple2<String, String> dat_top = to_oxdna_format(state.design, strands_to_export,
+          fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta);
       String dat = dat_top.item1;
       String top = dat_top.item2;
 
@@ -53,7 +61,13 @@ First select some strands, or choose Export🡒oxDNA to export all strands in th
       util.save_file(default_filename_top, top);
     } else if (action is actions.OxviewExport) {
       // var start = DateTime.now();
-      String content = to_oxview_format(state.design, strands_to_export);
+      String content = to_oxview_format(state.design, strands_to_export,
+          fwd_x_offset: fwd_x_offset,
+          rev_x_offset: rev_x_offset,
+          fwd_z_offset: fwd_z_offset,
+          rev_z_offset: rev_z_offset,
+          fwd_theta: fwd_theta,
+          rev_theta: rev_theta);
       // print('to_oxview_format: ${DateTime.now().inMilliseconds} ms');
       String default_filename = state.ui_state.loaded_filename;
       String default_filename_ext = path.setExtension(default_filename, '.oxview');
@@ -63,9 +77,16 @@ First select some strands, or choose Export🡒oxDNA to export all strands in th
   next(action);
 }
 
-String to_oxview_format(Design design, List<Strand> strands_to_export) {
+String to_oxview_format(Design design, List<Strand> strands_to_export,
+    {double fwd_x_offset = 0.5,
+    double rev_x_offset = 0.5,
+    double fwd_z_offset = 0.0,
+    double rev_z_offset = 0.0,
+    double fwd_theta = 0.0,
+    double rev_theta = 0.0}) {
   // var start = DateTime.now();
-  OxdnaSystem system = convert_design_to_oxdna_system(design, strands_to_export);
+  OxdnaSystem system = convert_design_to_oxdna_system(design, strands_to_export,
+      fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta);
   // print('convert_design_to_oxdna_system: ${DateTime.now().difference(start).inMilliseconds} ms');
 
   // start = DateTime.now();
@@ -195,8 +216,16 @@ String to_oxview_format(Design design, List<Strand> strands_to_export) {
   return content;
 }
 
-Tuple2<String, String> to_oxdna_format(Design design, [List<Strand>? strands_to_export = null]) {
-  OxdnaSystem system = convert_design_to_oxdna_system(design, strands_to_export);
+Tuple2<String, String> to_oxdna_format(Design design,
+    [List<Strand>? strands_to_export = null,
+    double fwd_x_offset = 0.5,
+    double rev_x_offset = 0.5,
+    double fwd_z_offset = 0.0,
+    double rev_z_offset = 0.0,
+    double fwd_theta = 0.0,
+    double rev_theta = 0.0]) {
+  OxdnaSystem system = convert_design_to_oxdna_system(design, strands_to_export,
+      fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta);
   Tuple2<String, String> dat_top = system.oxdna_output();
   return dat_top;
 }
@@ -429,7 +458,14 @@ Tuple3<OxdnaVector, OxdnaVector, OxdnaVector> oxdna_get_helix_vectors(Design des
   return Tuple3<OxdnaVector, OxdnaVector, OxdnaVector>(origin, forward, normal);
 }
 
-OxdnaSystem convert_design_to_oxdna_system(Design design, [List<Strand>? strands_to_export = null]) {
+OxdnaSystem convert_design_to_oxdna_system(Design design,
+    [List<Strand>? strands_to_export = null,
+    double fwd_x_offset = 0.5,
+    double rev_x_offset = 0.5,
+    double fwd_z_offset = 0.0,
+    double rev_z_offset = 0.0,
+    double fwd_theta = 0.0,
+    double rev_theta = 0.0]) {
   if (strands_to_export == null) {
     strands_to_export = design.strands.toList();
   }
@@ -593,15 +629,61 @@ OxdnaSystem convert_design_to_oxdna_system(Design design, [List<Strand>? strands
 
         int strand_length = dstrand.nucleotides.length;
 
-        // now we position loopouts relative to the previous and next strand
-        // for now we use a linear interpolation
-        var forward = next_nuc.center - prev_nuc.center;
-        var normal = get_normal_vector_to(forward);
+        // Direction from the previous nucleotide to the next (the interpolation axis).
+        var connection = next_nuc.center - prev_nuc.center;
+
+        // Out-of-plane direction: perpendicular to both the connection vector and
+        // the helix axis.  We recover the helix axis from prev_nuc.forward because:
+        //   nuc.forward = domain.forward ? -helix_axis : +helix_axis
+        // so helix_axis = domain.forward ? -prev_nuc.forward : +prev_nuc.forward.
+        //
+        // We must NOT use prev_nuc.forward directly: opposing loopouts can have
+        // one forward and one backward prev_domain, which would flip prev_nuc.forward
+        // and cancel the connection-vector sign change — causing both loopouts to
+        // arc in the same direction.  Using the recovered helix_axis keeps the
+        // reference vector constant so cross products are always opposite.
+        var prev_substrand = strand.substrands[i - 1];
+        bool prev_is_forward = (prev_substrand is Domain) ? prev_substrand.forward : true;
+        var helix_axis = prev_is_forward ? -prev_nuc.forward : prev_nuc.forward;
+        var out_of_plane_raw = connection.cross(helix_axis);
+        // Fall back to an arbitrary perpendicular if the vectors happen to be parallel.
+        if (out_of_plane_raw.length() < 1e-6) {
+          out_of_plane_raw = get_normal_vector_to(connection);
+        }
+        var out_of_plane = out_of_plane_raw.normalize();
+
+        // Select parameters based on whether the preceding domain is forward or reverse.
+        double x_off = prev_is_forward ? fwd_x_offset : rev_x_offset;
+        double z_off = prev_is_forward ? fwd_z_offset : rev_z_offset;
+        double theta = prev_is_forward ? fwd_theta : rev_theta;
+
+        // Strand exit direction (5'→3' at the loopout junction = −helix_axis direction
+        // for forward prev-domain, +helix_axis for reverse).  Naturally opposite for
+        // opposing loopouts when their prev domains have mixed forward/backward orientations.
+        var strand_exit_dir = -prev_nuc.forward;
+
+        // Normal (backbone→base, a1 vector): rotate by theta in the
+        // (out_of_plane, strand_exit_dir) plane.  Both vectors are unit-length and
+        // orthogonal, so the result is already unit-length.
+        //   theta = 0°   → points radially outward (out_of_plane)
+        //   theta = 90°  → points along strand exit direction
+        //   theta = 180° → points radially inward
+        double theta_rad = theta * pi / 180.0;
+        var norm_dir = out_of_plane * cos(theta_rad) + strand_exit_dir * sin(theta_rad);
+
+        var conn_norm = connection.normalize();
 
         for (int loopout_idx = 0; loopout_idx < strand_length; loopout_idx++) {
-          OxdnaVector pos = prev_nuc.center + forward * ((loopout_idx + 1) / (strand_length + 1));
+          double t = (loopout_idx + 1) / (strand_length + 1);
+          // Sine weight: zero at endpoints, maximum of 1 at midpoint.
+          double bulge = sin(pi * t);
+          // Position: direct radial (x_off) and axial (z_off) displacements, independent.
+          OxdnaVector pos = prev_nuc.center +
+              connection * t +
+              out_of_plane * (x_off * bulge) +
+              strand_exit_dir * (z_off * bulge);
           var old_nuc = dstrand.nucleotides[loopout_idx];
-          var new_nuc = OxdnaNucleotide(pos, normal.normalize(), forward.normalize(), old_nuc.base);
+          var new_nuc = OxdnaNucleotide(pos, norm_dir, conn_norm, old_nuc.base);
           dstrand.nucleotides[loopout_idx] = new_nuc;
         }
       }

@@ -140,6 +140,36 @@ abstract class AppUIStateStorables
 
   bool get show_all_t_bases;
 
+  /// Minimum formation_score for a CPD site to be rendered (0.0 = show all).
+  /// Adjusted via the threshold slider in the CPD Sites submenu.
+  double get cpd_score_threshold;
+
+  /// Whether to render photoproduct junction icons on the 2D canvas.
+  bool get show_photoproduct_junctions;
+
+  /// Radial (out-of-plane) displacement of loopout backbone centers for
+  /// forward-prev loopouts, in oxDNA units (1 unit ≈ 0.85 nm).
+  /// Positive values push the backbone away from the helix axis.
+  double get loopout_fwd_x_offset;
+
+  /// Radial displacement for reverse-prev loopouts, in oxDNA units.
+  double get loopout_rev_x_offset;
+
+  /// Axial (helix-axis) displacement for forward-prev loopouts, in oxDNA units.
+  /// Positive values shift the backbone along the strand exit direction.
+  double get loopout_fwd_z_offset;
+
+  /// Axial displacement for reverse-prev loopouts, in oxDNA units.
+  double get loopout_rev_z_offset;
+
+  /// Backbone→base normal vector angle for forward-prev loopouts, in degrees.
+  /// Rotates the a1 vector in the (out_of_plane, strand_exit_dir) plane.
+  /// 0° = radially outward; 90° = along strand exit direction.
+  double get loopout_fwd_theta;
+
+  /// Normal vector angle for reverse-prev loopouts, in degrees.
+  double get loopout_rev_theta;
+
   static void _initializeBuilder(AppUIStateStorablesBuilder b) {
     // This ensures that even if these keys are not in localStorage (e.g., due to upgrading),
     // then they will be populated with a default value instead of raising an exception.
@@ -203,6 +233,14 @@ abstract class AppUIStateStorables
     b.ox_export_only_selected_strands = false;
     b.show_cpd_sites_continuously = false;
     b.show_all_t_bases = false;
+    b.cpd_score_threshold = 0.0;
+    b.show_photoproduct_junctions = true;
+    b.loopout_fwd_x_offset = 1.03;
+    b.loopout_rev_x_offset = -0.63;
+    b.loopout_fwd_z_offset = 1.95;
+    b.loopout_rev_z_offset = -0.52;
+    b.loopout_fwd_theta = 225.0;
+    b.loopout_rev_theta = 261.0;
   }
 
   /************************ begin BuiltValue boilerplate ************************/

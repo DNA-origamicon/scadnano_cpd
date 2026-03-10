@@ -42,6 +42,7 @@ import 'invalidate_png.dart';
 import 'autostaple_and_autobreak.dart';
 import 'detect_cpd_sites.dart';
 import 'cpd_auto_trigger_middleware.dart';
+import 'cpd_parameters_reload_middleware.dart';
 import 'zoom_speed.dart';
 
 final all_middleware = List<Middleware<AppState>>.unmodifiable([
@@ -83,6 +84,7 @@ final all_middleware = List<Middleware<AppState>>.unmodifiable([
   zoom_speed_middleware,
   oxdna_export_middleware,
   oxview_update_view_middleware,
+  cpd_parameters_reload_middleware,
   detect_cpd_sites_middleware,
   cpd_auto_trigger_middleware,
   pdb_export_middleware,

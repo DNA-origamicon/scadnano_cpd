@@ -142,6 +142,20 @@ class DesignMainStrandCrossoverComponent
               props.crossover.handle_selection_mouse_up(ev.nativeEvent);
             }
           })
+          ..onContextMenu = ((ev) {
+            if (!ev.shiftKey) {
+              ev.preventDefault();
+              ev.stopPropagation();
+              app.dispatch(
+                actions.ContextMenuShow(
+                  context_menu: ContextMenu(
+                    items: context_menu_crossover(props.strand).build(),
+                    position: util.from_point_num(ev.nativeEvent.page),
+                  ),
+                ),
+              );
+            }
+          })
           ..id = id
           ..key = id;
 
@@ -153,38 +167,12 @@ class DesignMainStrandCrossoverComponent
     //    (Dom.svgTitle()(tooltip));
   }
 
-  @override
-  componentDidMount() {
-    var element = querySelector('#${props.crossover.id}')!;
-    element.addEventListener('contextmenu', on_context_menu);
-    super.componentDidMount();
-  }
-
-  @override
-  componentWillUnmount() {
-    var element = querySelector('#${props.crossover.id}')!;
-    element.removeEventListener('contextmenu', on_context_menu);
-    super.componentWillUnmount();
-  }
-
-  on_context_menu(Event ev) {
-    MouseEvent event = ev as MouseEvent;
-    if (!event.shiftKey) {
-      event.preventDefault();
-      event.stopPropagation(); // needed to prevent strand context menu from popping up
-      app.dispatch(
-        actions.ContextMenuShow(
-          context_menu: ContextMenu(
-            items: context_menu_crossover(props.strand).build(),
-            position: util.from_point_num(event.page),
-          ),
-        ),
-      );
-    }
-  }
-
   List<ContextMenuItem> context_menu_crossover(Strand strand) => [
     ContextMenuItem(title: 'convert to loopout', on_click: convert_crossover_to_loopout),
+    ContextMenuItem(
+      title: 'convert to thymine loopout',
+      on_click: convert_crossover_to_thymine_loopout,
+    ),
     ContextMenuItem(title: 'unstrain backbone here', on_click: unstrain_backbone_at_crossover),
   ];
 
@@ -233,6 +221,39 @@ class DesignMainStrandCrossoverComponent
       action = actions.ConvertCrossoversToLoopouts(selected_crossovers, new_length);
     } else {
       action = actions.ConvertCrossoverToLoopout(props.crossover, new_length);
+    }
+    app.dispatch(action);
+  }
+
+  /// Converts this crossover (or all selected crossovers) to a thymine loopout —
+  /// a loopout whose sequence is pre-filled with N thymine bases.
+  /// This is the primary UI workflow for engineering a CPD site.
+  convert_crossover_to_thymine_loopout() async {
+    int num_thymines = await ask_for_length(
+      'set number of thymines',
+      current_length: 2,
+      lower_bound: 1,
+      dialog_type: DialogType.set_loopout_length,
+      tooltip: 'Number of thymine (T) bases in the loopout. '
+          'Adjacent T-T pairs on the loopout will be detected as CPD sites.',
+    );
+    if (num_thymines == 0) {
+      return;
+    }
+
+    final String thymine_seq = 'T' * num_thymines;
+    var selected_crossovers = app.state.ui_state.selectables_store.selected_crossovers;
+
+    actions.UndoableAction action;
+    if (selected_crossovers.length > 0) {
+      // Batch individual conversions so each gets the thymine sequence.
+      final List<actions.UndoableAction> batch = [
+        for (final xover in selected_crossovers)
+          actions.ConvertCrossoverToLoopout(xover, num_thymines, thymine_seq),
+      ];
+      action = actions.BatchAction(batch, 'convert crossovers to thymine loopouts');
+    } else {
+      action = actions.ConvertCrossoverToLoopout(props.crossover, num_thymines, thymine_seq);
     }
     app.dispatch(action);
   }

@@ -5,23 +5,18 @@ packages:
     dependency: transitive
     description:
       name: _fe_analyzer_shared
-      sha256: "16e298750b6d0af7ce8a3ba7c18c69c3785d11b15ec83f6dcd0ad2a0009b3cab"
+      sha256: "0b2f2bd91ba804e53a61d757b986f89f1f9eaed5b11e4b2f5a2468d86d6c9fc7"
       url: "https://pub.dev"
     source: hosted
-    version: "76.0.0"
-  _macros:
-    dependency: transitive
-    description: dart
-    source: sdk
-    version: "0.3.3"
+    version: "67.0.0"
   analyzer:
     dependency: "direct main"
     description:
       name: analyzer
-      sha256: "1f14db053a8c23e260789e9b0980fa27f2680dd640932cae5e1137cce0e46e1e"
+      sha256: "37577842a27e4338429a1cbc32679d508836510b056f1eedf0c8d20e39c1383d"
       url: "https://pub.dev"
     source: hosted
-    version: "6.11.0"
+    version: "6.4.1"
   archive:
     dependency: transitive
     description:
@@ -90,10 +85,10 @@ packages:
     dependency: transitive
     description:
       name: build_modules
-      sha256: "349f492c6cf66d32d24b71368908df23426440bf9ee4642fdb79978adb82a877"
+      sha256: "6c5c9fde95400b9a1102fad2de007027e58c787514d5368115c13b5b32f46798"
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.12"
+    version: "5.1.8"
   build_resolvers:
     dependency: transitive
     description:
@@ -130,10 +125,10 @@ packages:
     dependency: "direct dev"
     description:
       name: build_web_compilers
-      sha256: cbe4deca108e5a9949df0065e7ef3777f54d8545b9232f2d8ef74601f2fb2df3
+      sha256: f7020628ddf67db7619025ff64b1d3e890419410c4356a28757907db6e61a1f8
       url: "https://pub.dev"
     source: hosted
-    version: "4.1.3"
+    version: "4.4.15"
   built_collection:
     dependency: "direct main"
     description:
@@ -234,10 +229,10 @@ packages:
     dependency: transitive
     description:
       name: dart_style
-      sha256: "7856d364b589d1f08986e140938578ed36ed948581fbc3bc9aef1805039ac5ab"
+      sha256: "99e066ce75c89d6b29903d788a7bb9369cf754f7b24bf70bf4b6d6d6b26853b9"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.7"
+    version: "2.3.6"
   dialog:
     dependency: "direct main"
     description:
@@ -366,14 +361,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
-  macros:
-    dependency: transitive
-    description:
-      name: macros
-      sha256: "1d9e801cd66f7ea3663c45fc708450db1fa57f988142c64289142c9b7ee80656"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.3-main.0"
   matcher:
     dependency: transitive
     description:
@@ -538,10 +525,10 @@ packages:
     dependency: transitive
     description:
       name: scratch_space
-      sha256: "8510fbff458d733a58fc427057d1ac86303b376d609d6e1bc43f240aad9aa445"
+      sha256: "3417e014d20b12cebc5bfb1c0b1f63806054177158596cc31cc4d9aaca767a60"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.2"
+    version: "1.2.0"
   shelf:
     dependency: transitive
     description:
@@ -718,6 +705,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  uuid:
+    dependency: transitive
+    description:
+      name: uuid
+      sha256: "1fef9e8e11e2991bb773070d4656b7bd5d850967a2456cfc83cf47925ba79489"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.5.3"
   vm_service:
     dependency: transitive
     description:
@@ -799,4 +794,4 @@ packages:
     source: hosted
     version: "3.1.3"
 sdks:
-  dart: ">=3.7.0 <3.8.0-z"
+  dart: ">=3.7.0 <3.12.0-z"

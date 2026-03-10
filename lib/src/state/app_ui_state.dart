@@ -254,6 +254,14 @@ abstract class AppUIState with BuiltJsonSerializable implements Built<AppUIState
   // CPD sites continuous display
   bool get show_cpd_sites_continuously => storables.show_cpd_sites_continuously;
   bool get show_all_t_bases => storables.show_all_t_bases;
+  double get cpd_score_threshold => storables.cpd_score_threshold;
+  bool get show_photoproduct_junctions => storables.show_photoproduct_junctions;
+  double get loopout_fwd_x_offset => storables.loopout_fwd_x_offset;
+  double get loopout_rev_x_offset => storables.loopout_rev_x_offset;
+  double get loopout_fwd_z_offset => storables.loopout_fwd_z_offset;
+  double get loopout_rev_z_offset => storables.loopout_rev_z_offset;
+  double get loopout_fwd_theta => storables.loopout_fwd_theta;
+  double get loopout_rev_theta => storables.loopout_rev_theta;
 
   static void _initializeBuilder(AppUIStateBuilder b) {
     b.copy_info = null;

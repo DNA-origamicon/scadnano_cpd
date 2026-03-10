@@ -35,8 +35,10 @@ import 'design.dart';
 
 import '../app.dart';
 import '../actions/actions.dart' as actions;
+import '../middleware/detect_cpd_sites.dart' show get_loaded_cpd_params;
 import '../state/app_state.dart';
 import '../util.dart' as util;
+import 'cpd_parameters_panel.dart' show render_cpd_parameters_panel;
 
 part 'menu.over_react.g.dart';
 
@@ -639,7 +641,7 @@ Ignored if design is not an origami (i.e., does not have at least one scaffold).
       view_menu_dna(),
       view_menu_cpd_sites(),
       DropdownDivider({'key': 'divider-cpd-sites'}),
-      ...view_menu_show_oxview(),
+      view_menu_oxview(),
       DropdownDivider({'key': 'divider-oxview'}),
       ...view_menu_zoom_speed(),
       DropdownDivider({'key': 'divider-zoom_speed'}),
@@ -1073,6 +1075,7 @@ Displays DNA right-side up on reverse strands.'''
   }
 
   ReactElement view_menu_cpd_sites() {
+    final loaded_params = get_loaded_cpd_params();
     return (MenuDropdownRight()
       ..title_ = 'CPD Sites'
       ..id_ = 'view_menu_cpd_sites-dropdown'
@@ -1084,9 +1087,8 @@ Displays DNA right-side up on reverse strands.'''
         ..tooltip = 'Show/hide CPD site highlights. Requires DNA sequences to be visible.'
         ..on_change = ((_) {
           if (props.state.ui_state.show_dna) {
-            // Only dispatch if DNA is shown
             app.dispatch(actions.ShowCPDSitesContinuouslySet.set(
-                !props.state.ui_state.show_cpd_sites_continuously)); // Use .set() factory
+                !props.state.ui_state.show_cpd_sites_continuously));
           }
         })
         ..key = 'show-cpd-sites')(),
@@ -1101,18 +1103,54 @@ Displays DNA right-side up on reverse strands.'''
           }
         })
         ..key = 'show-all-t-bases')(),
+      // Score threshold: hides sites below this formation_score (0.0 = show all).
+      (MenuNumber()
+        ..display = 'Min. score threshold'
+        ..tooltip =
+            'Hide CPD sites whose formation score is below this value (0.0 = show all, 1.0 = show only max-score sites).'
+        ..default_value = props.state.ui_state.cpd_score_threshold
+        ..min_value = 0.0
+        ..step = 0.05
+        ..hide = !props.state.ui_state.show_cpd_sites_continuously
+        ..on_new_value = ((num val) {
+          double clamped = val.toDouble().clamp(0.0, 1.0);
+          app.dispatch(actions.CpdScoreThresholdSet(clamped));
+        })
+        ..key = 'cpd-score-threshold')(),
+      // Show photoproduct junction icons toggle.
+      (MenuBoolean()
+        ..value = props.state.ui_state.show_photoproduct_junctions
+        ..display = 'Show photoproduct junctions'
+        ..tooltip = 'Show/hide confirmed photoproduct junction icons on the 2D canvas.'
+        ..on_change = ((_) {
+          app.dispatch(actions.ShowPhotoproductJunctionsSet(
+              !props.state.ui_state.show_photoproduct_junctions));
+        })
+        ..key = 'show-photoproduct-junctions')(),
+      // Reload button — always visible so the user can reload even before detection runs.
+      (MenuDropdownItem()
+        ..display = 'Reload parameters from file'
+        ..tooltip = 'Re-fetches cpd_parameters.json from the server and re-runs CPD detection.'
+        ..on_click = ((_) => app.dispatch(actions.ReloadCpdParameters()))
+        ..key = 'reload-cpd-params')(),
+      // Read-only parameter inspector — shown only once parameters are loaded.
+      if (render_cpd_parameters_panel(loaded_params) != null)
+        render_cpd_parameters_panel(loaded_params)!,
     ]);
   }
 
-  List<ReactElement> view_menu_show_oxview() {
-    return [
+  ReactElement view_menu_oxview() {
+    return (MenuDropdownRight()
+      ..title_ = 'oxView'
+      ..id_ = 'view_menu_oxview-dropdown'
+      ..key = 'view_menu_oxview-dropdown')(
       (MenuBoolean()
         ..value = props.state.ui_state.show_oxview
         ..display = 'Show oxView'
         ..tooltip = '''\
 Displays an embedded oxView window to visualize the 3D structure of the design.
 
-Currently the view is "read-only", it will export the scadnano design and show 
+Currently the view is "read-only", it will export the scadnano design and show
 it in the oxView window, but changes made in the oxView window are not propagated
 back to the scadnano design. Any changes will be lost the next time the scadnano
 design is edited.
@@ -1131,7 +1169,85 @@ keyboard shortcuts will be recognized by scadnano again.'''
           app.dispatch(actions.OxviewShowSet(!props.state.ui_state.show_oxview));
         }
         ..key = 'show-oxview')(),
-    ];
+      DropdownDivider({'key': 'divider-loopout-params'}),
+      (MenuNumber()
+        ..display = 'loopout (fwd) X offset'
+        ..tooltip =
+            'Radial displacement of loopout backbone centers for forward-prev loopouts '
+            '(in oxDNA units; 1 unit ≈ 0.85 nm). '
+            'Positive values push the backbone away from the helix axis. '
+            'Default: 1.03.'
+        ..default_value = props.state.ui_state.loopout_fwd_x_offset
+        ..min_value = -5.0
+        ..step = 0.1
+        ..on_new_value = ((num val) {
+          app.dispatch(actions.LoopoutFwdXOffsetSet(val.toDouble().clamp(-5.0, 5.0)));
+        })
+        ..key = 'loopout-fwd-x-offset')(),
+      (MenuNumber()
+        ..display = 'loopout (fwd) Z offset'
+        ..tooltip =
+            'Axial displacement of loopout backbone centers for forward-prev loopouts '
+            '(in oxDNA units). Positive values shift the backbone along the strand exit '
+            'direction (away from the preceding domain). Default: 1.95.'
+        ..default_value = props.state.ui_state.loopout_fwd_z_offset
+        ..min_value = -5.0
+        ..step = 0.1
+        ..on_new_value = ((num val) {
+          app.dispatch(actions.LoopoutFwdZOffsetSet(val.toDouble().clamp(-5.0, 5.0)));
+        })
+        ..key = 'loopout-fwd-z-offset')(),
+      (MenuNumber()
+        ..display = 'loopout (fwd) theta (°)'
+        ..tooltip =
+            'Backbone→base normal vector rotation for forward-prev loopouts, in degrees. '
+            'Rotates the base orientation in the radial / axial plane. '
+            '0° = base points radially outward; 90° = points along helix exit direction. '
+            'Default: 225°.'
+        ..default_value = props.state.ui_state.loopout_fwd_theta
+        ..step = 5.0
+        ..on_new_value = ((num val) {
+          app.dispatch(actions.LoopoutFwdThetaSet(val.toDouble() % 360.0));
+        })
+        ..key = 'loopout-fwd-theta')(),
+      DropdownDivider({'key': 'divider-loopout-rev'}),
+      (MenuNumber()
+        ..display = 'loopout (rev) X offset'
+        ..tooltip =
+            'Radial displacement of loopout backbone centers for reverse-prev loopouts '
+            '(in oxDNA units; 1 unit ≈ 0.85 nm). Default: −0.63.'
+        ..default_value = props.state.ui_state.loopout_rev_x_offset
+        ..min_value = -5.0
+        ..step = 0.1
+        ..on_new_value = ((num val) {
+          app.dispatch(actions.LoopoutRevXOffsetSet(val.toDouble().clamp(-5.0, 5.0)));
+        })
+        ..key = 'loopout-rev-x-offset')(),
+      (MenuNumber()
+        ..display = 'loopout (rev) Z offset'
+        ..tooltip =
+            'Axial displacement of loopout backbone centers for reverse-prev loopouts '
+            '(in oxDNA units). Default: −0.52.'
+        ..default_value = props.state.ui_state.loopout_rev_z_offset
+        ..min_value = -5.0
+        ..step = 0.1
+        ..on_new_value = ((num val) {
+          app.dispatch(actions.LoopoutRevZOffsetSet(val.toDouble().clamp(-5.0, 5.0)));
+        })
+        ..key = 'loopout-rev-z-offset')(),
+      (MenuNumber()
+        ..display = 'loopout (rev) theta (°)'
+        ..tooltip =
+            'Backbone→base normal vector rotation for reverse-prev loopouts, in degrees. '
+            '0° = base points radially outward; 90° = points along helix exit direction. '
+            'Default: 261°.'
+        ..default_value = props.state.ui_state.loopout_rev_theta
+        ..step = 5.0
+        ..on_new_value = ((num val) {
+          app.dispatch(actions.LoopoutRevThetaSet(val.toDouble() % 360.0));
+        })
+        ..key = 'loopout-rev-theta')(),
+    );
   }
 
   List<ReactElement> view_menu_zoom_speed() {

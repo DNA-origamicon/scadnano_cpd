@@ -35,6 +35,7 @@ import 'unused_fields.dart';
 import 'domain_name_mismatch.dart';
 import 'address.dart';
 import '../extension_methods.dart';
+import 'photoproduct_junction.dart';
 
 part 'design.g.dart';
 
@@ -135,6 +136,7 @@ abstract class Design with UnusedFields implements Built<Design, DesignBuilder>,
     b.groups[constants.default_group_name] = b.groups[constants.default_group_name]!.rebuild(
       (g) => g.grid = Grid.none,
     );
+    b.photoproduct_junctions = ListBuilder<PhotoproductJunction>();
   }
 
   @memoized
@@ -151,6 +153,8 @@ abstract class Design with UnusedFields implements Built<Design, DesignBuilder>,
   BuiltList<Strand> get strands;
 
   BuiltMap<String, HelixGroup> get groups;
+
+  BuiltList<PhotoproductJunction> get photoproduct_junctions;
 
   BuiltMap<int, Helix> helices_in_group(String group_name) =>
       BuiltMap<int, Helix>.from(helices.toMap()..removeWhere((idx, helix) => helix.group != group_name));
@@ -965,6 +969,12 @@ abstract class Design with UnusedFields implements Built<Design, DesignBuilder>,
       for (var strand in strands) strand.to_json_serializable(suppress_indent: suppress_indent),
     ];
 
+    if (photoproduct_junctions.isNotEmpty) {
+      json_map[constants.photoproduct_junctions_key] = [
+        for (var j in photoproduct_junctions) j.toJson(),
+      ];
+    }
+
     return json_map;
   }
 
@@ -1424,7 +1434,14 @@ abstract class Design with UnusedFields implements Built<Design, DesignBuilder>,
     }
     Design.assign_modifications_to_strands(strands, strand_jsons, mods_5p, mods_3p, mods_int, all_mods);
 
-    return Design(
+    List<PhotoproductJunction> photoproduct_junctions = [];
+    if (json_map.containsKey(constants.photoproduct_junctions_key)) {
+      for (var j_json in (json_map[constants.photoproduct_junctions_key] as List)) {
+        photoproduct_junctions.add(PhotoproductJunction.fromJson(j_json as Map<String, dynamic>));
+      }
+    }
+
+    var design = Design(
       helix_builders: helix_builders_map.values,
       strands: strands,
       groups: groups_map,
@@ -1432,6 +1449,12 @@ abstract class Design with UnusedFields implements Built<Design, DesignBuilder>,
       unused_fields: unused_fields.toMap(),
       invert_y: invert_y,
     );
+
+    if (photoproduct_junctions.isNotEmpty) {
+      design = design.rebuild((b) => b..photoproduct_junctions.replace(photoproduct_junctions));
+    }
+
+    return design;
   }
 
   static List<int> set_helices_view_order_default_group(

@@ -678,7 +678,31 @@ AppUIStateStorables app_ui_state_storable_local_reducer(AppUIStateStorables stor
                   storables.show_cpd_sites_continuously, action)
           ..show_all_t_bases =
               TypedReducer<bool, actions.ShowAllTBasesSet>(show_all_t_bases_reducer)(
-                  storables.show_all_t_bases, action),
+                  storables.show_all_t_bases, action)
+          ..cpd_score_threshold =
+              TypedReducer<double, actions.CpdScoreThresholdSet>(cpd_score_threshold_reducer)(
+                  storables.cpd_score_threshold, action)
+          ..show_photoproduct_junctions =
+              TypedReducer<bool, actions.ShowPhotoproductJunctionsSet>(
+                  show_photoproduct_junctions_reducer)(storables.show_photoproduct_junctions, action)
+          ..loopout_fwd_x_offset =
+              TypedReducer<double, actions.LoopoutFwdXOffsetSet>(loopout_fwd_x_offset_reducer)(
+                  storables.loopout_fwd_x_offset, action)
+          ..loopout_rev_x_offset =
+              TypedReducer<double, actions.LoopoutRevXOffsetSet>(loopout_rev_x_offset_reducer)(
+                  storables.loopout_rev_x_offset, action)
+          ..loopout_fwd_z_offset =
+              TypedReducer<double, actions.LoopoutFwdZOffsetSet>(loopout_fwd_z_offset_reducer)(
+                  storables.loopout_fwd_z_offset, action)
+          ..loopout_rev_z_offset =
+              TypedReducer<double, actions.LoopoutRevZOffsetSet>(loopout_rev_z_offset_reducer)(
+                  storables.loopout_rev_z_offset, action)
+          ..loopout_fwd_theta =
+              TypedReducer<double, actions.LoopoutFwdThetaSet>(loopout_fwd_theta_reducer)(
+                  storables.loopout_fwd_theta, action)
+          ..loopout_rev_theta =
+              TypedReducer<double, actions.LoopoutRevThetaSet>(loopout_rev_theta_reducer)(
+                  storables.loopout_rev_theta, action),
   );
 }
 
@@ -902,3 +926,14 @@ BuiltList<CPDSite> cpd_sites_reducer(BuiltList<CPDSite> cpd_sites, action) {
 bool show_cpd_sites_continuously_reducer(bool _, actions.ShowCPDSitesContinuouslySet action) => action.show;
 
 bool show_all_t_bases_reducer(bool _, actions.ShowAllTBasesSet action) => action.show;
+
+double cpd_score_threshold_reducer(double _, actions.CpdScoreThresholdSet action) => action.threshold;
+
+bool show_photoproduct_junctions_reducer(bool _, actions.ShowPhotoproductJunctionsSet action) => action.show;
+
+double loopout_fwd_x_offset_reducer(double _, actions.LoopoutFwdXOffsetSet action) => action.value;
+double loopout_rev_x_offset_reducer(double _, actions.LoopoutRevXOffsetSet action) => action.value;
+double loopout_fwd_z_offset_reducer(double _, actions.LoopoutFwdZOffsetSet action) => action.value;
+double loopout_rev_z_offset_reducer(double _, actions.LoopoutRevZOffsetSet action) => action.value;
+double loopout_fwd_theta_reducer(double _, actions.LoopoutFwdThetaSet action) => action.degrees;
+double loopout_rev_theta_reducer(double _, actions.LoopoutRevThetaSet action) => action.degrees;

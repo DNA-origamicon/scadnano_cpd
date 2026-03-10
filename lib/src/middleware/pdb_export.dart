@@ -32,7 +32,13 @@ pdb_export_middleware(Store<AppState> store, dynamic action, NextDispatcher next
     }
 
     // Convert design to oxDNA format
-    Tuple2<String, String> dat_top = oxdna_export.to_oxdna_format(design, strands_to_export);
+    Tuple2<String, String> dat_top = oxdna_export.to_oxdna_format(design, strands_to_export,
+        state.ui_state.loopout_fwd_x_offset,
+        state.ui_state.loopout_rev_x_offset,
+        state.ui_state.loopout_fwd_z_offset,
+        state.ui_state.loopout_rev_z_offset,
+        state.ui_state.loopout_fwd_theta,
+        state.ui_state.loopout_rev_theta);
     String dat_content = dat_top.item1;
     String top_content = dat_top.item2;
 

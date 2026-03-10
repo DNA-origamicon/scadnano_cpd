@@ -122,38 +122,23 @@ class DesignMainStrandModificationComponent extends UiComponent2<DesignMainStran
           props.selectable_modification.handle_selection_mouse_up(ev.nativeEvent);
         }
       })
+      ..onContextMenu = ((ev) {
+        if (!ev.shiftKey) {
+          ev.preventDefault();
+          ev.stopPropagation(); // needed to prevent strand context menu from popping up
+          app.dispatch(
+            actions.ContextMenuShow(
+              context_menu: ContextMenu(
+                items: context_menu_modification(this.strand).build(),
+                position: util.from_point_num(ev.nativeEvent.page),
+              ),
+            ),
+          );
+        }
+      })
       ..className = classname
       ..id = id
       ..transform = props.transform)(elements);
-  }
-
-  @override
-  componentDidMount() {
-    var element = querySelector('#${props.selectable_modification.id}')!;
-    element.addEventListener('contextmenu', on_context_menu);
-  }
-
-  @override
-  componentWillUnmount() {
-    super.componentWillUnmount();
-    var element = querySelector('#${props.selectable_modification.id}')!;
-    element.removeEventListener('contextmenu', on_context_menu);
-  }
-
-  on_context_menu(Event ev) {
-    MouseEvent event = ev as MouseEvent;
-    if (!event.shiftKey) {
-      event.preventDefault();
-      event.stopPropagation(); // needed to prevent strand context menu from popping up
-      app.dispatch(
-        actions.ContextMenuShow(
-          context_menu: ContextMenu(
-            items: context_menu_modification(this.strand).build(),
-            position: util.from_point_num(event.page),
-          ),
-        ),
-      );
-    }
   }
 
   List<ContextMenuItem> context_menu_modification(Strand strand) => [

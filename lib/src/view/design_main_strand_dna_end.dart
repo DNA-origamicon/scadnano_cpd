@@ -204,62 +204,35 @@ class DesignMainDNAEndComponent extends UiComponent2<DesignMainDNAEndProps> with
 
     return (Dom.g()
       ..className = constants.css_selector_end_parent_group
-      ..transform = props.transform)(end_props(), end_moving_props(), extension_end_moving_props());
-  }
+      ..transform = props.transform
+      ..onContextMenu = ((ev) {
+        if (!ev.shiftKey) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          // If they clicked on a domain, send the domain's address to the context menu
+          // otherwise it's an extension, then we send the address of the adjacent domain's 5'/3' end.
+          Domain domain = this.is_on_extension ? props.ext!.adjacent_domain : props.domain!;
+          Address address = props.is_5p ? domain.address_5p : domain.address_3p;
 
-  @override
-  componentDidMount() {
-    String id;
-    if (props.is_5p) {
-      id = props.domain != null ? props.domain!.dnaend_5p.id : props.ext!.dnaend_free.id;
-    } else {
-      id = props.domain != null ? props.domain!.dnaend_3p.id : props.ext!.dnaend_free.id;
-    }
-    var element = querySelector('#${id}')!;
-    element.addEventListener('contextmenu', on_context_menu);
-  }
-
-  @override
-  componentWillUnmount() {
-    String id;
-    if (props.is_5p) {
-      id = props.domain != null ? props.domain!.dnaend_5p.id : props.ext!.dnaend_free.id;
-    } else {
-      id = props.domain != null ? props.domain!.dnaend_3p.id : props.ext!.dnaend_free.id;
-    }
-    var element = querySelector('#${id}')!;
-    element.removeEventListener('contextmenu', on_context_menu);
-    super.componentWillUnmount();
-  }
-
-  on_context_menu(Event ev) {
-    MouseEvent event = ev as MouseEvent;
-    if (!event.shiftKey) {
-      event.preventDefault();
-      event.stopPropagation();
-      // If they clicked on a domain, send the domain's address to the context menu
-      // otherwise it's an extension, then we send the address of the adjacent domain's 5'/3' end.
-      Domain domain = this.is_on_extension ? props.ext!.adjacent_domain : props.domain!;
-      Address address = props.is_5p ? domain.address_5p : domain.address_3p;
-
-      app.dispatch(
-        actions.ContextMenuShow(
-          context_menu: ContextMenu(
-            items:
-                props
-                    .context_menu_strand(
-                      props.strand,
-                      domain: domain,
-                      address: address,
-                      modification_type:
-                          (props.is_5p ? ModificationType.five_prime : ModificationType.three_prime),
-                    )
-                    .build(),
-            position: util.from_point_num(event.page),
-          ),
-        ),
-      );
-    }
+          app.dispatch(
+            actions.ContextMenuShow(
+              context_menu: ContextMenu(
+                items:
+                    props
+                        .context_menu_strand(
+                          props.strand,
+                          domain: domain,
+                          address: address,
+                          modification_type:
+                              (props.is_5p ? ModificationType.five_prime : ModificationType.three_prime),
+                        )
+                        .build(),
+                position: util.from_point_num(ev.nativeEvent.page),
+              ),
+            ),
+          );
+        }
+      }))(end_props(), end_moving_props(), extension_end_moving_props());
   }
 
   handle_end_click_select_and_or_move_start(react.SyntheticPointerEvent event_synthetic) {

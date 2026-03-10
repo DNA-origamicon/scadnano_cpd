@@ -124,6 +124,20 @@ class DesignMainExtensionComponent extends UiComponent2<DesignMainExtensionProps
       ..className = classname
       ..onPointerDown = handle_click_down
       ..onPointerUp = handle_click_up
+      ..onContextMenu = ((ev) {
+        if (!ev.shiftKey) {
+          ev.preventDefault();
+          ev.stopPropagation(); // needed to prevent strand context menu from popping up
+          app.dispatch(
+            actions.ContextMenuShow(
+              context_menu: ContextMenu(
+                items: context_menu_extension().build(),
+                position: util.from_point_num(ev.nativeEvent.page),
+              ),
+            ),
+          );
+        }
+      })
       ..stroke = color.toHexColor().toCssString()
       ..transform = props.transform
       ..d = path_d
@@ -154,35 +168,6 @@ class DesignMainExtensionComponent extends UiComponent2<DesignMainExtensionProps
       if (extension_selectable(props.ext) && !currently_moving) {
         props.ext.handle_selection_mouse_up(event_syn.nativeEvent);
       }
-    }
-  }
-
-  @override
-  componentDidMount() {
-    var element = querySelector('#${props.ext.id}')!;
-    element.addEventListener('contextmenu', on_context_menu);
-  }
-
-  @override
-  componentWillUnmount() {
-    super.componentWillUnmount();
-    var element = querySelector('#${props.ext.id}')!;
-    element.removeEventListener('contextmenu', on_context_menu);
-  }
-
-  on_context_menu(Event ev) {
-    MouseEvent event = ev as MouseEvent;
-    if (!event.shiftKey) {
-      event.preventDefault();
-      event.stopPropagation(); // needed to prevent strand context menu from popping up
-      app.dispatch(
-        actions.ContextMenuShow(
-          context_menu: ContextMenu(
-            items: context_menu_extension().build(),
-            position: util.from_point_num(event.page),
-          ),
-        ),
-      );
     }
   }
 

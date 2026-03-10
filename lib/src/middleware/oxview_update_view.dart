@@ -38,16 +38,47 @@ oxview_update_view_middleware(Store<AppState> store, dynamic action, NextDispatc
     app.view.update_showing_oxview();
   }
 
-  if (store.state.ui_state.show_oxview && action is actions.DesignChangingAction) {
-    update_oxview_view(store.state.design);
+  bool show = store.state.ui_state.show_oxview;
+  if (show && action is actions.DesignChangingAction) {
+    _update_oxview_with_state(store.state);
   }
+  if (show &&
+      (action is actions.LoopoutFwdXOffsetSet ||
+          action is actions.LoopoutRevXOffsetSet ||
+          action is actions.LoopoutFwdZOffsetSet ||
+          action is actions.LoopoutRevZOffsetSet ||
+          action is actions.LoopoutFwdThetaSet ||
+          action is actions.LoopoutRevThetaSet)) {
+    _update_oxview_with_state(store.state);
+  }
+}
+
+// Helper that extracts all loopout params from state and calls update_oxview_view.
+void _update_oxview_with_state(AppState state) {
+  update_oxview_view(
+    state.design,
+    null,
+    state.ui_state.loopout_fwd_x_offset,
+    state.ui_state.loopout_rev_x_offset,
+    state.ui_state.loopout_fwd_z_offset,
+    state.ui_state.loopout_rev_z_offset,
+    state.ui_state.loopout_fwd_theta,
+    state.ui_state.loopout_rev_theta,
+  );
 }
 
 // `frame` argument is optional because usually we get it from app.view.oxview_view.frame,
 // but on startup, `app.view` is not yet initialized (we're in the View constructor
 // the first time we call `update_oxview_view`), so from that constructor, we send the frame explicitly
 // to this function just after creating it, but before it can be accessed via `app.view.oxview_view?.frame`.
-void update_oxview_view(Design design, [IFrameElement? frame = null]) {
+void update_oxview_view(Design design,
+    [IFrameElement? frame = null,
+    double fwd_x_offset = 0.5,
+    double rev_x_offset = 0.5,
+    double fwd_z_offset = 0.0,
+    double rev_z_offset = 0.0,
+    double fwd_theta = 0.0,
+    double rev_theta = 0.0]) {
   if (frame == null) {
     frame = app.view.oxview_view.frame;
   }
@@ -66,8 +97,8 @@ void update_oxview_view(Design design, [IFrameElement? frame = null]) {
   // send current exported design
   List<Strand> strands_to_export = design.strands.toList();
 
-  // String content = to_oxview_format(design, strands_to_export);
-  Tuple2<String, String> dat_top = to_oxdna_format(design, strands_to_export);
+  Tuple2<String, String> dat_top = to_oxdna_format(design, strands_to_export,
+      fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta);
   String dat = dat_top.item1;
   String top = dat_top.item2;
 

@@ -7,7 +7,9 @@ import 'package:built_collection/built_collection.dart';
 import 'package:redux/redux.dart';
 
 import '../actions/actions.dart' as actions;
+import '../constants.dart' as constants;
 import '../state/app_state.dart';
+import '../state/cpd_parameters.dart';
 import '../state/cpd_site.dart';
 import '../state/design.dart';
 import '../state/domain.dart';
@@ -16,14 +18,28 @@ import '../state/strand.dart';
 import '../state/substrand.dart';
 import '../state/t_base_location.dart';
 import '../util/t_base_util.dart' as t_base_util;
-import 'cpd_rule_helpers.dart'; // Import the new helper file
+import 'cpd_rule_helpers.dart';
+
+/// Cached CpdParameters loaded from cpd_parameters.json at runtime.
+/// Null until the first successful load; falls back to allRuleDefinitions
+/// (hardcoded score = 1.0) if the file is unavailable.
+CpdParameters? _cpd_params;
+bool _cpd_params_loading = false;
+
+/// Returns the currently-loaded [CpdParameters], or null if not yet loaded.
+/// Used by the CPD parameters panel to display version and product info.
+CpdParameters? get_loaded_cpd_params() => _cpd_params;
 
 /// Middleware that handles T-base scanning and CPD pairing when DetectCPDSites action is dispatched.
 Middleware<AppState> detect_cpd_sites_middleware =
     (Store<AppState> store, dynamic action, NextDispatcher next) {
-  // Handle the action *before* passing it to the next middleware/reducer if it's the scan action.
   if (action is actions.DetectCPDSites) {
     _collect_t_bases_and_detect_cpds(store);
+    next(action);
+  } else if (action is actions.CpdParametersLoaded) {
+    // Update the module-level cache when parameters are reloaded via ReloadCpdParameters.
+    _cpd_params = action.params;
+    _cpd_params_loading = false;
     next(action);
   } else {
     // Pass other actions along
@@ -31,8 +47,31 @@ Middleware<AppState> detect_cpd_sites_middleware =
   }
 };
 
-/// Scans for T-bases, calculates CPD pairs using RuleProcessor, and dispatches results.
+/// Loads cpd_parameters.json once and caches it.  Calls [_do_detect] when ready.
 void _collect_t_bases_and_detect_cpds(Store<AppState> store) {
+  if (_cpd_params != null) {
+    _do_detect(store, _cpd_params);
+    return;
+  }
+  if (_cpd_params_loading) {
+    // Load already in flight — run with null params (falls back to allRuleDefinitions)
+    _do_detect(store, null);
+    return;
+  }
+  _cpd_params_loading = true;
+  HttpRequest.getString(constants.CPD_PARAMETERS_PATH).then((content) {
+    _cpd_params = CpdParameters.from_json_string(content);
+    _cpd_params_loading = false;
+    _do_detect(store, _cpd_params);
+  }).catchError((e) {
+    _cpd_params_loading = false;
+    print('CPD parameters load failed ($e); using hardcoded scores');
+    _do_detect(store, null);
+  });
+}
+
+/// Scans for T-bases, calculates CPD pairs using RuleProcessor, and dispatches results.
+void _do_detect(Store<AppState> store, CpdParameters? params) {
   AppState state = store.state;
   Design design = state.design;
   List<IdentifiedTBase> identified_t_bases = [];
@@ -138,7 +177,7 @@ void _collect_t_bases_and_detect_cpds(Store<AppState> store) {
   // }).toList()));
   // print('LOG_IDENTIFIED_T_BASES_END');
 
-  CPDDetectionOutput output = detect_cpd_sites_from_t_bases(design, identified_t_bases);
+  CPDDetectionOutput output = detect_cpd_sites_from_t_bases(design, identified_t_bases, null, params);
   
   // // Do not remove this commented block of code.
   // // Needed for collection result data when creating CPD detection rule unit tests.

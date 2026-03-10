@@ -1,8 +1,10 @@
 import 'package:redux/redux.dart';
+import 'package:built_collection/built_collection.dart';
 
 import '../state/app_state.dart';
 import '../reducers/util_reducer.dart';
 import '../state/design.dart';
+import '../state/photoproduct_junction.dart';
 import '../actions/actions.dart' as actions;
 import 'groups_reducer.dart';
 import 'helices_reducer.dart';
@@ -38,7 +40,10 @@ Design? design_composed_local_reducer(Design? design, action) => design?.rebuild
       d
         ..groups.replace(groups_local_reducer(design.groups, action))
         ..helices.replace(helices_local_reducer(design.helices, action))
-        ..strands.replace(strands_local_reducer(design.strands, action)),
+        ..strands.replace(strands_local_reducer(design.strands, action))
+        ..photoproduct_junctions.replace(
+          photoproduct_junctions_reducer(design.photoproduct_junctions, action),
+        ),
 );
 
 // composed: operate on slices of the DNADesign
@@ -93,3 +98,28 @@ Design? design_geometry_set_reducer(Design? design, AppState state, actions.Geom
 }
 
 Design? new_design_set_reducer(Design? design, actions.NewDesignSet action) => action.design;
+
+BuiltList<PhotoproductJunction> photoproduct_junctions_reducer(
+  BuiltList<PhotoproductJunction> junctions,
+  action,
+) {
+  if (action is actions.MarkAsPhotoproductJunction) {
+    // Avoid duplicates (same t1+t2 pair already marked).
+    bool already_exists = junctions.any(
+      (j) =>
+          j.t1_stable_id == action.junction.t1_stable_id &&
+          j.t2_stable_id == action.junction.t2_stable_id,
+    );
+    if (already_exists) return junctions;
+    return junctions.rebuild((b) => b.add(action.junction));
+  }
+  if (action is actions.UnmarkPhotoproductJunction) {
+    return junctions.rebuild(
+      (b) => b.removeWhere(
+        (j) =>
+            j.t1_stable_id == action.t1_stable_id && j.t2_stable_id == action.t2_stable_id,
+      ),
+    );
+  }
+  return junctions;
+}

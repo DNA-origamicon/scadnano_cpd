@@ -228,6 +228,7 @@ const design_modifications_5p_key = 'modifications_5p_in_design';
 const design_modifications_3p_key = 'modifications_3p_in_design';
 const design_modifications_int_key = 'modifications_int_in_design';
 const groups_key = 'groups';
+const photoproduct_junctions_key = 'photoproduct_junctions';
 final design_keys =
     [
       version_key,
@@ -241,6 +242,7 @@ final design_keys =
       design_modifications_3p_key,
       design_modifications_int_key,
       groups_key,
+      photoproduct_junctions_key,
     ] +
     legacy_geometry_keys;
 
@@ -498,3 +500,9 @@ enum strand_bounds_status {
 }
 
 const PDB_TEMPLATE_PATH = "dd12_na.pdb";
+
+// Path to the photoproduct formation parameter file, served from web/ at runtime.
+// Loaded at startup using the same HttpRequest pattern as PDB_TEMPLATE_PATH.
+// See lib/src/state/cpd_parameters.dart for the Dart model.
+// See cpd/VALIDATION_GUIDE_PHASE0.md for the update protocol.
+const CPD_PARAMETERS_PATH = "cpd_parameters.json";

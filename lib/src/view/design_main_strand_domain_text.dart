@@ -78,46 +78,29 @@ class DesignMainStrandDomainTextComponent extends UiComponent2<DesignMainStrandD
       ..transform = props.transform
       ..fontSize = props.font_size
       ..dominantBaseline = baseline
-      ..className = props.css_selector_text)(props.text);
+      ..className = props.css_selector_text
+      ..onContextMenu = ((ev) {
+        if (!ev.shiftKey) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          Address address = util.find_closest_address(
+            ev.nativeEvent,
+            [props.helix],
+            props.helix_groups,
+            props.geometry,
+            {props.helix.idx: props.helix_svg_position}.build(),
+          );
+          app.dispatch(
+            actions.ContextMenuShow(
+              context_menu: ContextMenu(
+                items: props.context_menu_strand(props.strand, domain: props.domain, address: address).build(),
+                position: util.from_point_num(ev.nativeEvent.page),
+              ),
+            ),
+          );
+        }
+      }))(props.text);
   }
 
   String id() => props.strand.id + '_name';
-
-  // needed for capturing right-click events with React:
-  // https://medium.com/@ericclemmons/react-event-preventdefault-78c28c950e46
-  @override
-  componentDidMount() {
-    var element = querySelector('#${id()}')!;
-    element.addEventListener('contextmenu', on_context_menu);
-  }
-
-  @override
-  componentWillUnmount() {
-    var element = querySelector('#${id()}')!;
-    element.removeEventListener('contextmenu', on_context_menu);
-    super.componentWillUnmount();
-  }
-
-  on_context_menu(Event ev) {
-    MouseEvent event = ev as MouseEvent;
-    if (!event.shiftKey) {
-      event.preventDefault();
-      event.stopPropagation();
-      Address address = util.find_closest_address(
-        event,
-        [props.helix],
-        props.helix_groups,
-        props.geometry,
-        {props.helix.idx: props.helix_svg_position}.build(),
-      );
-      app.dispatch(
-        actions.ContextMenuShow(
-          context_menu: ContextMenu(
-            items: props.context_menu_strand(props.strand, domain: props.domain, address: address).build(),
-            position: util.from_point_num(event.page),
-          ),
-        ),
-      );
-    }
-  }
 }

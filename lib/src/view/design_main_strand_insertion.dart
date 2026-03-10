@@ -80,6 +80,20 @@ class DesignMainStrandInsertionComponent extends UiComponent2<DesignMainStrandIn
           props.selectable_insertion.handle_selection_mouse_up(ev.nativeEvent);
         }
       })
+      ..onContextMenu = ((ev) {
+        if (!ev.shiftKey) {
+          ev.preventDefault();
+          ev.stopPropagation(); // needed to prevent strand context menu from popping up
+          app.dispatch(
+            actions.ContextMenuShow(
+              context_menu: ContextMenu(
+                items: context_menu_insertion().build(),
+                position: util.from_point_num(ev.nativeEvent.page),
+              ),
+            ),
+          );
+        }
+      })
       ..transform = props.transform)(insertion_path, insertion_background, text_num_insertions);
   }
 
@@ -213,36 +227,6 @@ class DesignMainStrandInsertionComponent extends UiComponent2<DesignMainStrandIn
         }
       }
       ..key = key_background)();
-  }
-
-  @override
-  componentDidMount() {
-    var element = querySelector('#${props.selectable_insertion.id_group}')!;
-    element.addEventListener('contextmenu', on_context_menu);
-    super.componentDidMount();
-  }
-
-  @override
-  componentWillUnmount() {
-    var element = querySelector('#${props.selectable_insertion.id_group}')!;
-    element.removeEventListener('contextmenu', on_context_menu);
-    super.componentWillUnmount();
-  }
-
-  on_context_menu(Event ev) {
-    MouseEvent event = ev as MouseEvent;
-    if (!event.shiftKey) {
-      event.preventDefault();
-      event.stopPropagation(); // needed to prevent strand context menu from popping up
-      app.dispatch(
-        actions.ContextMenuShow(
-          context_menu: ContextMenu(
-            items: context_menu_insertion().build(),
-            position: util.from_point_num(event.page),
-          ),
-        ),
-      );
-    }
   }
 
   List<ContextMenuItem> context_menu_insertion() => [

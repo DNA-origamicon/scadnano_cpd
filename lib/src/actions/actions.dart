@@ -21,6 +21,8 @@ import 'package:scadnano/src/state/substrand.dart';
 import 'package:scadnano/src/util.dart';
 
 import '../state/address.dart';
+import '../state/cpd_parameters.dart';
+import '../state/photoproduct_junction.dart';
 import '../state/app_ui_state_storables.dart';
 import '../state/domain.dart';
 import '../state/design.dart';
@@ -159,6 +161,109 @@ abstract class ShowAllTBasesSet
 
   ShowAllTBasesSet._();
   static Serializer<ShowAllTBasesSet> get serializer => _$showAllTBasesSetSerializer;
+}
+
+/// Sets radial (X) backbone displacement for forward-prev loopouts in 3D export.
+class LoopoutFwdXOffsetSet implements Action {
+  final double value;
+  LoopoutFwdXOffsetSet(this.value);
+  @override
+  dynamic toJson() => {'type': 'LoopoutFwdXOffsetSet', 'value': value};
+}
+
+/// Sets radial (X) backbone displacement for reverse-prev loopouts in 3D export.
+class LoopoutRevXOffsetSet implements Action {
+  final double value;
+  LoopoutRevXOffsetSet(this.value);
+  @override
+  dynamic toJson() => {'type': 'LoopoutRevXOffsetSet', 'value': value};
+}
+
+/// Sets axial (Z) backbone displacement for forward-prev loopouts in 3D export.
+class LoopoutFwdZOffsetSet implements Action {
+  final double value;
+  LoopoutFwdZOffsetSet(this.value);
+  @override
+  dynamic toJson() => {'type': 'LoopoutFwdZOffsetSet', 'value': value};
+}
+
+/// Sets axial (Z) backbone displacement for reverse-prev loopouts in 3D export.
+class LoopoutRevZOffsetSet implements Action {
+  final double value;
+  LoopoutRevZOffsetSet(this.value);
+  @override
+  dynamic toJson() => {'type': 'LoopoutRevZOffsetSet', 'value': value};
+}
+
+/// Sets backbone→base normal angle (degrees) for forward-prev loopouts.
+/// 0° = radially outward; 90° = along strand exit direction.
+class LoopoutFwdThetaSet implements Action {
+  final double degrees;
+  LoopoutFwdThetaSet(this.degrees);
+  @override
+  dynamic toJson() => {'type': 'LoopoutFwdThetaSet', 'degrees': degrees};
+}
+
+/// Sets backbone→base normal angle (degrees) for reverse-prev loopouts.
+class LoopoutRevThetaSet implements Action {
+  final double degrees;
+  LoopoutRevThetaSet(this.degrees);
+  @override
+  dynamic toJson() => {'type': 'LoopoutRevThetaSet', 'degrees': degrees};
+}
+
+/// Plain action — sets the minimum formation_score threshold for CPD site rendering.
+/// Sites with score < threshold are hidden in the highlights layer.
+class CpdScoreThresholdSet implements Action {
+  final double threshold;
+  CpdScoreThresholdSet(this.threshold);
+  @override
+  dynamic toJson() => {'type': 'CpdScoreThresholdSet', 'threshold': threshold};
+}
+
+/// Plain action — triggers a fresh fetch of cpd_parameters.json from the server.
+/// No built_value; carries no payload.
+class ReloadCpdParameters implements Action {
+  @override
+  dynamic toJson() => {'type': 'ReloadCpdParameters'};
+}
+
+/// Plain action — dispatched by middleware when cpd_parameters.json is (re)loaded.
+/// No built_value; carries the freshly-parsed parameters.
+class CpdParametersLoaded implements Action {
+  final CpdParameters params;
+  CpdParametersLoaded(this.params);
+  @override
+  dynamic toJson() => {'type': 'CpdParametersLoaded', 'schema_version': params.schema_version};
+}
+
+/// Marks a CPD site as a confirmed photoproduct junction and persists it on the Design.
+class MarkAsPhotoproductJunction implements Action {
+  final PhotoproductJunction junction;
+  MarkAsPhotoproductJunction(this.junction);
+  @override
+  dynamic toJson() => {'type': 'MarkAsPhotoproductJunction', 'junction': junction.toJson()};
+}
+
+/// Removes a photoproduct junction matched by t1_stable_id + t2_stable_id.
+class UnmarkPhotoproductJunction implements Action {
+  final String t1_stable_id;
+  final String t2_stable_id;
+  UnmarkPhotoproductJunction(this.t1_stable_id, this.t2_stable_id);
+  @override
+  dynamic toJson() => {
+        'type': 'UnmarkPhotoproductJunction',
+        't1_stable_id': t1_stable_id,
+        't2_stable_id': t2_stable_id,
+      };
+}
+
+/// Toggles visibility of the photoproduct junction icons on the 2D canvas.
+class ShowPhotoproductJunctionsSet implements Action {
+  final bool show;
+  ShowPhotoproductJunctionsSet(this.show);
+  @override
+  dynamic toJson() => {'type': 'ShowPhotoproductJunctionsSet', 'show': show};
 }
 
 /// [Action] that should trigger storing of certain [Storable]s to localStorage.

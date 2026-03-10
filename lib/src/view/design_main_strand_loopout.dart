@@ -129,6 +129,20 @@ class DesignMainLoopoutComponent extends UiStatefulComponent2<DesignMainLoopoutP
               props.loopout.handle_selection_mouse_up(ev.nativeEvent);
             }
           })
+          ..onContextMenu = ((ev) {
+            if (!ev.shiftKey) {
+              ev.preventDefault();
+              ev.stopPropagation(); // needed to prevent strand context menu from popping up
+              app.dispatch(
+                actions.ContextMenuShow(
+                  context_menu: ContextMenu(
+                    items: context_menu_loopout().build(),
+                    position: util.from_point_num(ev.nativeEvent.page),
+                  ),
+                ),
+              );
+            }
+          })
           ..key = props.loopout.id
           ..id = props.loopout.id;
 
@@ -137,35 +151,6 @@ class DesignMainLoopoutComponent extends UiStatefulComponent2<DesignMainLoopoutP
     }
 
     return path_props(Dom.svgTitle()(tooltip));
-  }
-
-  @override
-  componentDidMount() {
-    var element = querySelector('#${props.loopout.id}')!;
-    element.addEventListener('contextmenu', on_context_menu);
-  }
-
-  @override
-  componentWillUnmount() {
-    super.componentWillUnmount();
-    var element = querySelector('#${props.loopout.id}')!;
-    element.removeEventListener('contextmenu', on_context_menu);
-  }
-
-  on_context_menu(Event ev) {
-    MouseEvent event = ev as MouseEvent;
-    if (!event.shiftKey) {
-      event.preventDefault();
-      event.stopPropagation(); // needed to prevent strand context menu from popping up
-      app.dispatch(
-        actions.ContextMenuShow(
-          context_menu: ContextMenu(
-            items: context_menu_loopout().build(),
-            position: util.from_point_num(event.page),
-          ),
-        ),
-      );
-    }
   }
 
   List<ContextMenuItem> context_menu_loopout() => [
@@ -418,17 +403,21 @@ String loopout_path_description_within_group(
     h = 10 * util.sigmoid(loopout.loopout_num_bases - 3) * prev_geometry.base_height_svg;
   }
 
+  // Thymine loopouts (engineered CPD sites) arc in the opposite x-direction so
+  // that adjacent loopouts at neighbouring positions don't visually overlap.
+  double effective_w = loopout.is_thymine_loopout ? -w : w;
+
   var x_offset1, x_offset2, y_offset1, y_offset2;
   y_offset1 = prev_svg.y;
   y_offset2 = next_svg.y;
   x_offset1 = prev_svg.x;
   x_offset2 = next_svg.x;
   if (top_offset == top_dom.end - 1) {
-    x_offset1 += w;
-    x_offset2 += w;
+    x_offset1 += effective_w;
+    x_offset2 += effective_w;
   } else {
-    x_offset1 -= w;
-    x_offset2 -= w;
+    x_offset1 -= effective_w;
+    x_offset2 -= effective_w;
   }
   if (top_dom_is_prev) {
     y_offset1 -= h;

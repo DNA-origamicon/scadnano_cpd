@@ -54,7 +54,20 @@ class DesignMainHelixComponent extends UiComponent2<DesignMainHelixProps> with P
 
     return (Dom.g()
       ..id = group_id()
-      ..className = 'helix-main-view')([
+      ..className = 'helix-main-view'
+      ..onContextMenu = ((ev) {
+        if (!ev.shiftKey) {
+          ev.preventDefault();
+          app.dispatch(
+            actions.ContextMenuShow(
+              context_menu: ContextMenu(
+                items: context_menu_helix(props.helix, props.helix_change_apply_to_all),
+                position: util.from_point_num(ev.nativeEvent.page),
+              ),
+            ),
+          );
+        }
+      }))([
       if (props.show_helix_circles)
         (Dom.circle()
           ..className = 'main-view-helix-circle ' + (props.selected ? "selected" : "")
@@ -131,40 +144,6 @@ class DesignMainHelixComponent extends UiComponent2<DesignMainHelixProps> with P
         ..className = 'helix-invisible-rect'
         ..key = 'helix-invisible-rect')(),
     ]);
-  }
-
-  // needed for capturing right-click events with React:
-  // https://medium.com/@ericclemmons/react-event-preventdefault-78c28c950e46
-  @override
-  componentDidMount() {
-    if (props.show_helix_circles) {
-      var elt = querySelector('#${group_id()}')!;
-      elt.addEventListener('contextmenu', on_context_menu);
-    }
-  }
-
-  @override
-  componentWillUnmount() {
-    if (props.show_helix_circles) {
-      var elt = querySelector('#${group_id()}')!;
-      elt.removeEventListener('contextmenu', on_context_menu);
-    }
-    super.componentWillUnmount();
-  }
-
-  on_context_menu(Event ev) {
-    MouseEvent event = ev as MouseEvent;
-    if (!event.shiftKey) {
-      event.preventDefault();
-      app.dispatch(
-        actions.ContextMenuShow(
-          context_menu: ContextMenu(
-            items: context_menu_helix(props.helix, props.helix_change_apply_to_all),
-            position: util.from_point_num(event.page),
-          ),
-        ),
-      );
-    }
   }
 
   String helix_circle_id() => 'main-view-helix-circle-${props.helix.idx}';

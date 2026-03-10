@@ -39,6 +39,7 @@ import 'react_dnd.dart';
 import '../util.dart' as util;
 import '../app.dart';
 import 'design_main_cpd_highlights.dart';
+import 'design_main_photoproduct_junctions.dart';
 
 part 'design_main.over_react.g.dart';
 
@@ -196,6 +197,9 @@ class DesignMainComponent extends UiComponent2<DesignMainProps> {
 
       // T-base highlights - render right after DNA sequences
       (ConnectedDesignMainCPDHighlights()..key = 't-base-highlights')(),
+
+      // Photoproduct junction icons - rendered above CPD highlights
+      (ConnectedDesignMainPhotoproductJunctions()..key = 'photoproduct-junctions')(),
 
       if (ui_state.show_loopout_extension_length)
         (DesignMainLoopoutExtensionLengths()

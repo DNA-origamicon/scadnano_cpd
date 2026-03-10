@@ -79,6 +79,15 @@ abstract class Loopout
 
   bool is_extension() => false;
 
+  /// True if this loopout has an explicitly assigned sequence consisting
+  /// entirely of thymine (T) bases. Used to flip the arc direction in the
+  /// SVG so engineered CPD loopouts don't visually overlap with neighbours.
+  bool get is_thymine_loopout {
+    final seq = dna_sequence;
+    if (seq == null || seq.isEmpty) return false;
+    return !seq.contains(RegExp(r'[^T]'));
+  }
+
   @memoized
   SelectModeChoice get select_mode => SelectModeChoice.loopout;
 

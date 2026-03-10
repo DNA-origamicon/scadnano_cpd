@@ -14,6 +14,7 @@ Strand convert_crossover_to_loopout_reducer(Strand strand, actions.ConvertCrosso
     loopout_num_bases: action.length,
     prev_domain_idx: action.crossover.prev_domain_idx,
     is_scaffold: strand.is_scaffold,
+    dna_sequence: action.dna_sequence,
   );
   var substrands = strand.substrands.toList();
   substrands.insert(action.crossover.next_domain_idx, loopout_new);
