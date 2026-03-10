@@ -19,6 +19,8 @@ import 'package:scadnano/src/state/position3d.dart';
 import 'package:scadnano/src/state/strand.dart';
 import 'package:tuple/tuple.dart';
 import '../state/app_state.dart';
+import '../state/photoproduct_junction.dart';
+import '../state/t_base_location.dart';
 import '../actions/actions.dart' as actions;
 import '../state/helix.dart';
 import '../util.dart' as util;
@@ -39,7 +41,10 @@ oxview_update_view_middleware(Store<AppState> store, dynamic action, NextDispatc
   }
 
   bool show = store.state.ui_state.show_oxview;
-  if (show && action is actions.DesignChangingAction) {
+  if (show &&
+      (action is actions.DesignChangingAction ||
+          action is actions.MarkAsPhotoproductJunction ||
+          action is actions.UnmarkPhotoproductJunction)) {
     _update_oxview_with_state(store.state);
   }
   if (show &&
@@ -64,6 +69,8 @@ void _update_oxview_with_state(AppState state) {
     state.ui_state.loopout_rev_z_offset,
     state.ui_state.loopout_fwd_theta,
     state.ui_state.loopout_rev_theta,
+    cpd_junctions: state.design.photoproduct_junctions.toList(),
+    cpd_t_base_locations: state.ui_state.t_base_locations,
   );
 }
 
@@ -78,7 +85,9 @@ void update_oxview_view(Design design,
     double fwd_z_offset = 0.0,
     double rev_z_offset = 0.0,
     double fwd_theta = 0.0,
-    double rev_theta = 0.0]) {
+    double rev_theta = 0.0,
+    List<PhotoproductJunction>? cpd_junctions,
+    TBaseLocations? cpd_t_base_locations]) {
   if (frame == null) {
     frame = app.view.oxview_view.frame;
   }
@@ -98,7 +107,8 @@ void update_oxview_view(Design design,
   List<Strand> strands_to_export = design.strands.toList();
 
   Tuple2<String, String> dat_top = to_oxdna_format(design, strands_to_export,
-      fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta);
+      fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta,
+      cpd_junctions, cpd_t_base_locations);
   String dat = dat_top.item1;
   String top = dat_top.item2;
 

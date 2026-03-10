@@ -210,22 +210,26 @@ refinement.  The PDB LINK records flag the bond; visualization of distorted geom
 done in an external tool (e.g., UCSF Chimera, VMD).
 
 **Deferred:**
-- oxView live re-export trigger on `MarkAsPhotoproductJunction` / `UnmarkPhotoproductJunction`
-  (requires `oxview_update_view.dart` middleware hook; currently the user re-exports manually)
+- ~~oxView live re-export trigger on `MarkAsPhotoproductJunction` / `UnmarkPhotoproductJunction`~~
+  **DONE**: `oxview_update_view_middleware` now triggers on both junction actions; passes
+  `cpd_junctions` and `cpd_t_base_locations` to `to_oxdna_format` via `update_oxview_view`.
 
 ---
 
-## Phase 6 — Integration & Parameter Update Workflow 🔲 NOT STARTED
-*Depends on: Phase 5 complete*
+## Phase 6 — Integration & Parameter Update Workflow ✅ COMPLETE
+*Completed: 2026-03-09*
 
 Lock down the full pipeline with regression tests and a lab protocol for updating parameters.
 
-| Deliverable | Notes |
-|---|---|
-| Lab protocol document for parameter updates | When/how to increment schema_version |
-| `cpd_parameters_version` on exported designs | Reproducibility |
-| `test/cpd_parameter_regression_test.dart` | Pinned params + known scores |
-| `test/cpd_end_to_end_test.dart` | Full pipeline: design → params → CPDSite → PhotoproductJunction → PDB |
+| Deliverable | File | Notes |
+|---|---|---|
+| Lab protocol document | `cpd/PARAMETER_UPDATE_PROTOCOL.md` | When/how to increment schema_version, enabling new photoproducts |
+| `test/cpd_parameter_regression_test.dart` | `test/cpd_parameter_regression_test.dart` | 10 cases; pins all weights from v0.1.0; Chrome |
+| `test/cpd_end_to_end_test.dart` | `test/cpd_end_to_end_test.dart` | Full pipeline: design → CPD detection → junction → PDB LINK + oxDNA distortion; Chrome |
+| oxView live junction re-export | `lib/src/middleware/oxview_update_view.dart` | Trigger on `MarkAsPhotoproductJunction` / `UnmarkPhotoproductJunction`; passes junction data |
+
+**Deferred:**
+- `cpd_parameters_version` on exported `.sc` files — architecturally complex; lab notebook recording of schema_version is sufficient for now (see PARAMETER_UPDATE_PROTOCOL.md)
 
 ---
 
