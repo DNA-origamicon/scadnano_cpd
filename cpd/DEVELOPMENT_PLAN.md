@@ -115,8 +115,9 @@ each loopout independently receives the thymine sequence.
 
 ---
 
-## Phase 5 — PhotoproductJunction Object ✅ PARTIAL (5a/5b/5c done)
+## Phase 5 — PhotoproductJunction Object ✅ COMPLETE (5a–5e done)
 *Completed 5a/5b/5c: 2026-03-09*
+*Completed 5d/5e: 2026-03-09*
 *Assumption: all photoproducts are canonical TT-CPDs (cyclobutane pyrimidine dimer).*
 
 The goal is to let the user "confirm" a detected CPD site into a persistent `PhotoproductJunction`
@@ -169,42 +170,48 @@ UI interactions to create and remove `PhotoproductJunction` entries.
 
 ---
 
-### Phase 5d — PDB LINK Records 🔲
+### Phase 5d — PDB LINK Records ✅ COMPLETE
 
 Emit `LINK` records in the PDB export that describe the covalent C5-C5 / C6-C6 bond of the
 cyclobutane ring (canonical CPD: atoms C5 and C6 of each thymine form the four-membered ring).
 
 | Deliverable | File | Notes |
 |---|---|---|
-| `emit_cpd_link_records()` helper | `lib/src/util/pdb_exporter.dart` | Writes two LINK records (C5↔C5 and C6↔C6) for each junction |
-| Map `TBaseLocation` → PDB residue serial | `lib/src/util/pdb_exporter.dart` | Use existing helix/offset → residue lookup |
-| Pass `BuiltList<PhotoproductJunction>` through export pipeline | `lib/src/middleware/pdb_export.dart` → `pdb_exporter.dart` | Thread junctions from `state.design` into the exporter |
-| LINK record format test | `test/pdb_export_test.dart` | Verify LINK lines appear with correct atom names and serial numbers |
+| `_format_link_record()` helper | `lib/src/util/pdb_exporter.dart` | Writes two LINK records (C5↔C5 and C6↔C6) for each junction; 78-char PDB spec |
+| `junction_stable_id_pairs` + `stable_id_to_pdb_loc` params | `lib/src/util/pdb_exporter.dart` | Optional params with empty defaults; PDB pipeline unaffected |
+| Build stable_id → (chain, residue_serial) mapping | `lib/src/middleware/pdb_export.dart` | Uses `t_base_locations.logical_index` + strand index; passes to exporter |
+| LINK record format test | `test/pdb_export_test.dart` | Verifies 2 LINK lines, C5/C6 atom names, precede ATOM records, distance 1.57 |
 
 **CPD LINK atom names (canonical TT-CPD):**
 ```
-LINK         C5  THY A   i              C5  THY A  i+1    1.57
-LINK         C6  THY A   i              C6  THY A  i+1    1.57
+LINK         C5  DT  A      3              C5  DT  A      5     1.57
+LINK         C6  DT  A      3              C6  DT  A      5     1.57
 ```
-Bond length ~1.57 Å for the cyclobutane C-C bond. Coordinates remain unmodified (approximate).
+Bond length ~1.57 Å for the cyclobutane C-C bond. Thymine residue name read from PDB template.
 
 ---
 
-### Phase 5e — oxView CPD Visualization 🔲
+### Phase 5e — oxView / oxDNA CPD Geometry Distortion ✅ COMPLETE
 
-Signal CPD junctions in the oxView iframe so the user can see them in 3D.
+Pull confirmed CPD thymine nucleotide centers together in the oxDNA/oxView export so the
+junction is visually apparent in 3D (option B chosen).
 
 | Deliverable | File | Notes |
 |---|---|---|
-| In-oxView indication strategy | — | **Decision point:** oxDNA coarse-grained model has one bead per nucleotide — no atomic C5/C6. Realistic options: (A) color CPD thymine beads differently, (B) pull CPD thymine centers closer (~1.0 nm) in the .dat export, (C) document as PDB-only feature. |
-| Implementation (option A: color) | `lib/src/middleware/oxdna_export.dart` | Mark CPD thymine nucleotides with a distinct base character (e.g. `'P'`) so oxView colors them differently |
-| OR implementation (option B: distort) | same | Set CPD thymine pair centers to midpoint ± half cyclobutane geometry; adjust normals to minimize strain |
-| oxView update on junction change | `lib/src/middleware/oxview_update_view.dart` | Trigger re-export when `MarkAsPhotoproductJunction` or `UnmarkPhotoproductJunction` dispatched |
-| **Recommended start:** option A (color only) | — | Geometry distortion can follow once color marking is validated |
+| `_apply_cpd_distortion()` post-processor | `lib/src/middleware/oxdna_export.dart` | Moves both T centers to midpoint; averages normals; silently skips unknown stable_ids |
+| `cpd_junctions` + `cpd_t_base_locations` params | `convert_design_to_oxdna_system()`, `to_oxdna_format()`, `to_oxview_format()` | Optional with null defaults; PDB pipeline is unaffected |
+| Thread junction data from middleware | `oxdna_export_middleware` (same file) | Passes `design.photoproduct_junctions` + `ui_state.t_base_locations` to both export paths |
+
+**Behavior:** The distortion only applies when junctions are confirmed AND CPD Sites detection
+has been run (so `t_base_locations` is populated).  Re-export after marking new junctions.
 
 **Note:** True CPD geometry (ring puckering, backbone distortion) requires all-atom MD
-refinement and is out of scope for this tool. The PDB LINK records flag the bond; visualization
-of the distorted geometry is best done in an external tool (e.g., UCSF Chimera, VMD).
+refinement.  The PDB LINK records flag the bond; visualization of distorted geometry is best
+done in an external tool (e.g., UCSF Chimera, VMD).
+
+**Deferred:**
+- oxView live re-export trigger on `MarkAsPhotoproductJunction` / `UnmarkPhotoproductJunction`
+  (requires `oxview_update_view.dart` middleware hook; currently the user re-exports manually)
 
 ---
 

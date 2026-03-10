@@ -293,6 +293,44 @@ The `cpd_sites_reducer` updates `AppUIState.cpd_sites`:
 - **Loopout-Loopout Anchor Conditional:** For loopouts to be considered adjacent, they currently need to match on both anchor points. However, the current Condition allows for adjacency if only one set of anchor points matches.
 - **SVG Export:** Changes to the DOM to enable locating rendered T-Base position are not supported by the existing Scadnano SVG Export tool. Ideally, this issue will be resolved not by modifying the SVG Export code, but by implementing the T-Base identification marker improvements described in the Future Improvements section.
 
+## PhotoproductJunction Feature
+
+Detected CPD sites can be **confirmed** as photoproduct junctions through the UI, persisted in the `.sc` file, and reflected in 3D exports.
+
+### Marking and Removing Junctions
+
+When "Show CPD Sites" is enabled, each detected site displays:
+- Two colored circles at the T-base positions (color from `cpd_parameters.json`)
+- A double connecting line between them
+- On hover: circles brighten and a **ghost diamond icon** fades in at the midpoint
+
+**To mark a junction:** hover over a CPD site and click the ghost diamond, or right-click either circle → "Mark as photoproduct junction".
+
+**To remove a junction:** click the solid gold diamond icon that marks confirmed junctions.
+
+Confirmed junctions are saved in the `.sc` file under the `photoproduct_junctions` key.
+
+### PDB Export
+
+When exporting to PDB (`File → Export → PDB`), confirmed junctions produce `LINK` records encoding the cyclobutane C5↔C5 and C6↔C6 bonds (1.57 Å) above the `ATOM` records.
+
+### oxDNA / oxView Export
+
+When exporting to oxDNA or oxView format, confirmed junction thymine nucleotides are pulled to their geometric midpoint in 3D space, providing a clear visual indicator of the covalent bond. Re-export after marking new junctions to see the updated geometry.
+
+### Key Files
+
+| File | Role |
+|---|---|
+| `lib/src/state/photoproduct_junction.dart` | `PhotoproductJunction` state class (t1_stable_id, t2_stable_id, photoproduct_id) |
+| `lib/src/view/design_main_cpd_highlights.dart` | Hover ghost diamond + mark-on-click UI |
+| `lib/src/view/design_main_photoproduct_junctions.dart` | Solid diamond icon for confirmed junctions |
+| `lib/src/util/pdb_exporter.dart` | LINK record generation for PDB export |
+| `lib/src/middleware/oxdna_export.dart` | CPD geometry distortion for oxDNA/oxView |
+| `web/cpd_parameters.json` | Photoproduct parameters: color, formation rate, weights |
+
+---
+
 ## Future Improvements
 
 - **Refactor T-Base Identification Markers:** Instead of wrapping each 'T' in a `<tspan>` with structural information encoded in the ID, use the parent `<text>`/`<textPath>` elements as the DOM location marker and store any structural and character position information in a data attribute. This change would simplify the DOM, shift some T-specific offset calculations to scan time, and resolve the SVG Export issue.
@@ -300,3 +338,5 @@ The `cpd_sites_reducer` updates `AppUIState.cpd_sites`:
 - **Condition Granularity:** Break larger Conditions in the Rule Engine up into smaller and more reusable components. For example, turn the `AdjacentExtensionLoopoutAlignedPairCondition` into the `AdjacentExtensionLoopout` and `AlignedPairCondition` Conditions.
 - **Scoring Based on Experimental Values:** Update `RuleDefinition.score` to support probabilistic results based on experimental data, and incorporate additional Conditions derived from that same data.
 - **Unit Test Expansion (CPD specific):** Expand unit testing for CPD rules to cover more diverse configuration scenarios, and add dedicated unit tests for individual helper functions.
+- **oxView live re-export:** Trigger oxView iframe refresh automatically when junctions are marked/unmarked (currently requires manual re-export).
+- **Phase 6 integration tests:** End-to-end test covering design → params → CPDSite → PhotoproductJunction → PDB/oxView pipeline.

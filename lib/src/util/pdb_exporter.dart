@@ -552,12 +552,80 @@ Map<String, PdbNucleotide> parse_pdb_template_from_string(String pdb_file_conten
   return templates;
 }
 
+/// Format a PDB LINK record (78 chars) for a covalent bond between two residues.
+/// atom names follow PDB standard (e.g. "C5", "C6"); residue names are 3-char
+/// padded (e.g. "DT "); chains are single characters; seq numbers are 1-based.
+String _format_link_record(
+  String atom1_name,
+  String res1_name,
+  String chain1,
+  int seq1,
+  String atom2_name,
+  String res2_name,
+  String chain2,
+  int seq2,
+  double distance,
+) {
+  // Atom names: 1–3 char names get a leading space (columns 13–16 in PDB spec).
+  String _pad_atom(String name) {
+    if (name.length <= 3) return ' ${name.padRight(3)}';
+    return name.substring(0, 4);
+  }
+
+  String a1 = _pad_atom(atom1_name);
+  String a2 = _pad_atom(atom2_name);
+  String r1 = res1_name.padRight(3).substring(0, 3);
+  String r2 = res2_name.padRight(3).substring(0, 3);
+
+  // PDB LINK record column layout (1-based, fixed-width 78 chars):
+  // 1-6:   "LINK  "
+  // 7-12:  blanks
+  // 13-16: atom name 1
+  // 17:    altLoc1 (blank)
+  // 18-20: resName1
+  // 21:    blank
+  // 22:    chain1
+  // 23-26: resSeq1
+  // 27:    iCode1 (blank)
+  // 28-42: blanks (15)
+  // 43-46: atom name 2
+  // 47:    altLoc2 (blank)
+  // 48-50: resName2
+  // 51:    blank
+  // 52:    chain2
+  // 53-56: resSeq2
+  // 57:    iCode2 (blank)
+  // 58-73: blanks (16)
+  // 74-78: distance (5.2f)
+  return 'LINK  ' +
+      '      ' +
+      a1 +
+      ' ' +
+      r1 +
+      ' ' +
+      chain1 +
+      seq1.toString().padLeft(4) +
+      ' ' +
+      '               ' +
+      a2 +
+      ' ' +
+      r2 +
+      ' ' +
+      chain2 +
+      seq2.toString().padLeft(4) +
+      ' ' +
+      '                ' +
+      distance.toStringAsFixed(2).padLeft(5);
+}
+
 Future<String> export_pdb_from_oxdna_strings({
   required String top_content,
   required String dat_content,
   required String pdb_template_content,
   bool oxDNA_direction = true,
   bool uniform_residue_names = false,
+  List<Tuple2<String, String>> junction_stable_id_pairs = const [],
+  Map<String, Tuple2<String, int>> stable_id_to_pdb_loc = const {},
 }) async {
   Map<String, PdbNucleotide> templates = parse_pdb_template_from_string(pdb_template_content);
   var lorenzoReader = LorenzoReader(top_content, dat_content);
@@ -632,5 +700,38 @@ Future<String> export_pdb_from_oxdna_strings({
     }
     pdb_lines.add('TER');
   }
-  return pdb_lines.join('\n') + '\n';
+
+  // Build LINK records for confirmed photoproduct junctions (CPD C5–C5 and C6–C6 bonds).
+  // These are prepended before the ATOM records per PDB convention.
+  var link_lines = <String>[];
+  if (junction_stable_id_pairs.isNotEmpty && stable_id_to_pdb_loc.isNotEmpty) {
+    // Determine residue name for thymine from the template (e.g. "DT" or "THY").
+    String thymine_res_name = 'DT';
+    if (templates.containsKey('T')) {
+      var t_atoms = templates['T']!.base_atoms;
+      if (t_atoms.isNotEmpty) {
+        thymine_res_name = t_atoms.first.residue;
+      }
+    }
+
+    for (var pair in junction_stable_id_pairs) {
+      var loc1 = stable_id_to_pdb_loc[pair.item1];
+      var loc2 = stable_id_to_pdb_loc[pair.item2];
+      if (loc1 == null || loc2 == null) continue;
+
+      String chain1 = loc1.item1;
+      int seq1 = loc1.item2;
+      String chain2 = loc2.item1;
+      int seq2 = loc2.item2;
+
+      // TT-CPD covalent bonds: C5–C5 and C6–C6 at ~1.57 Å.
+      link_lines.add(_format_link_record(
+          'C5', thymine_res_name, chain1, seq1, 'C5', thymine_res_name, chain2, seq2, 1.57));
+      link_lines.add(_format_link_record(
+          'C6', thymine_res_name, chain1, seq1, 'C6', thymine_res_name, chain2, seq2, 1.57));
+    }
+  }
+
+  var all_lines = [...link_lines, ...pdb_lines];
+  return all_lines.join('\n') + '\n';
 }

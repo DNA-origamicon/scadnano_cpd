@@ -17,6 +17,8 @@ import 'package:scadnano/src/state/position3d.dart';
 import 'package:scadnano/src/state/strand.dart';
 import 'package:tuple/tuple.dart';
 import '../state/app_state.dart';
+import '../state/photoproduct_junction.dart';
+import '../state/t_base_location.dart';
 import '../actions/actions.dart' as actions;
 import '../state/helix.dart';
 import '../util.dart' as util;
@@ -47,9 +49,13 @@ First select some strands, or choose Export🡒oxDNA to export all strands in th
     double fwd_theta = state.ui_state.loopout_fwd_theta;
     double rev_theta = state.ui_state.loopout_rev_theta;
 
+    var cpd_junctions = state.design.photoproduct_junctions.toList();
+    var cpd_t_base_locations = state.ui_state.t_base_locations;
+
     if (action is actions.OxdnaExport) {
       Tuple2<String, String> dat_top = to_oxdna_format(state.design, strands_to_export,
-          fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta);
+          fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta,
+          cpd_junctions, cpd_t_base_locations);
       String dat = dat_top.item1;
       String top = dat_top.item2;
 
@@ -67,7 +73,9 @@ First select some strands, or choose Export🡒oxDNA to export all strands in th
           fwd_z_offset: fwd_z_offset,
           rev_z_offset: rev_z_offset,
           fwd_theta: fwd_theta,
-          rev_theta: rev_theta);
+          rev_theta: rev_theta,
+          cpd_junctions: cpd_junctions,
+          cpd_t_base_locations: cpd_t_base_locations);
       // print('to_oxview_format: ${DateTime.now().inMilliseconds} ms');
       String default_filename = state.ui_state.loaded_filename;
       String default_filename_ext = path.setExtension(default_filename, '.oxview');
@@ -83,10 +91,13 @@ String to_oxview_format(Design design, List<Strand> strands_to_export,
     double fwd_z_offset = 0.0,
     double rev_z_offset = 0.0,
     double fwd_theta = 0.0,
-    double rev_theta = 0.0}) {
+    double rev_theta = 0.0,
+    List<PhotoproductJunction>? cpd_junctions,
+    TBaseLocations? cpd_t_base_locations}) {
   // var start = DateTime.now();
   OxdnaSystem system = convert_design_to_oxdna_system(design, strands_to_export,
-      fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta);
+      fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta,
+      cpd_junctions, cpd_t_base_locations);
   // print('convert_design_to_oxdna_system: ${DateTime.now().difference(start).inMilliseconds} ms');
 
   // start = DateTime.now();
@@ -223,9 +234,12 @@ Tuple2<String, String> to_oxdna_format(Design design,
     double fwd_z_offset = 0.0,
     double rev_z_offset = 0.0,
     double fwd_theta = 0.0,
-    double rev_theta = 0.0]) {
+    double rev_theta = 0.0,
+    List<PhotoproductJunction>? cpd_junctions = null,
+    TBaseLocations? cpd_t_base_locations = null]) {
   OxdnaSystem system = convert_design_to_oxdna_system(design, strands_to_export,
-      fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta);
+      fwd_x_offset, rev_x_offset, fwd_z_offset, rev_z_offset, fwd_theta, rev_theta,
+      cpd_junctions, cpd_t_base_locations);
   Tuple2<String, String> dat_top = system.oxdna_output();
   return dat_top;
 }
@@ -458,6 +472,64 @@ Tuple3<OxdnaVector, OxdnaVector, OxdnaVector> oxdna_get_helix_vectors(Design des
   return Tuple3<OxdnaVector, OxdnaVector, OxdnaVector>(origin, forward, normal);
 }
 
+/// Pull both thymine nucleotide centers to their midpoint for each confirmed
+/// PhotoproductJunction.  This gives a clear "bonded" visual in oxView/oxDNA
+/// without requiring any atomic-resolution geometry.  The base normals are
+/// averaged so orientations remain plausible.  Silently skips junctions whose
+/// stable IDs are not found in [t_base_locations] (e.g. if CPD detection has
+/// not been run yet, or the junction involves strands not being exported).
+void _apply_cpd_distortion(
+  OxdnaSystem system,
+  List<Strand> strands_to_export,
+  TBaseLocations t_base_locations,
+  List<PhotoproductJunction> junctions,
+) {
+  if (junctions.isEmpty) return;
+
+  // Map strand_id → index in strands_to_export (= index in system.strands).
+  var strand_id_to_idx = <String, int>{};
+  for (int i = 0; i < strands_to_export.length; i++) {
+    strand_id_to_idx[strands_to_export[i].id] = i;
+  }
+
+  // Map stable_id → (system-strand-index, logical_index_within_strand).
+  var stable_to_loc = <String, Tuple2<int, int>>{};
+  for (var t in t_base_locations.t_bases) {
+    var idx = strand_id_to_idx[t.strand_id];
+    if (idx == null) continue;
+    stable_to_loc[t.stable_id] = Tuple2(idx, t.logical_index);
+  }
+
+  for (var junction in junctions) {
+    var loc1 = stable_to_loc[junction.t1_stable_id];
+    var loc2 = stable_to_loc[junction.t2_stable_id];
+    if (loc1 == null || loc2 == null) continue;
+
+    int si1 = loc1.item1, li1 = loc1.item2;
+    int si2 = loc2.item1, li2 = loc2.item2;
+    if (si1 >= system.strands.length || si2 >= system.strands.length) continue;
+
+    var nucs1 = system.strands[si1].nucleotides;
+    var nucs2 = system.strands[si2].nucleotides;
+    if (li1 >= nucs1.length || li2 >= nucs2.length) continue;
+
+    var nuc1 = nucs1[li1];
+    var nuc2 = nucs2[li2];
+
+    // Move both centers to midpoint so they appear co-located in oxView.
+    var mid = (nuc1.center + nuc2.center) * 0.5;
+    nuc1.center = mid;
+    nuc2.center = mid;
+
+    // Average backbone-base normals.  Guard against antiparallel cancellation
+    // (which would produce a near-zero vector) by keeping nuc1's normal as a
+    // fallback.
+    var avg_normal_raw = nuc1.normal + nuc2.normal;
+    nuc1.normal = avg_normal_raw.length() > 1e-6 ? avg_normal_raw.normalize() : nuc1.normal;
+    nuc2.normal = nuc1.normal;
+  }
+}
+
 OxdnaSystem convert_design_to_oxdna_system(Design design,
     [List<Strand>? strands_to_export = null,
     double fwd_x_offset = 0.5,
@@ -465,7 +537,9 @@ OxdnaSystem convert_design_to_oxdna_system(Design design,
     double fwd_z_offset = 0.0,
     double rev_z_offset = 0.0,
     double fwd_theta = 0.0,
-    double rev_theta = 0.0]) {
+    double rev_theta = 0.0,
+    List<PhotoproductJunction>? cpd_junctions = null,
+    TBaseLocations? cpd_t_base_locations = null]) {
   if (strands_to_export == null) {
     strands_to_export = design.strands.toList();
   }
@@ -690,6 +764,11 @@ OxdnaSystem convert_design_to_oxdna_system(Design design,
       sstrand = sstrand.join(dstrand);
     }
     system.strands.add(sstrand);
+  }
+
+  // Apply CPD geometry distortion: pull confirmed junction T-base centers together.
+  if (cpd_junctions != null && cpd_junctions.isNotEmpty && cpd_t_base_locations != null) {
+    _apply_cpd_distortion(system, strands_to_export, cpd_t_base_locations, cpd_junctions);
   }
 
   return system;

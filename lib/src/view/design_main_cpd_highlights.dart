@@ -51,6 +51,7 @@ class DesignMainCPDHighlightsComponent extends UiComponent2<DesignMainCPDHighlig
 
     List<ReactElement> elements = [];
     double radius = props.geometry?.base_width_svg != null ? props.geometry!.base_width_svg * 0.35 : 3.5;
+    double half_size = props.geometry?.base_width_svg != null ? props.geometry!.base_width_svg * 0.40 : 4.0;
     double threshold = props.cpd_score_threshold ?? 0.0;
 
     // Render light blue circles for ALL T-bases that have visual coordinates.
@@ -72,6 +73,8 @@ class DesignMainCPDHighlightsComponent extends UiComponent2<DesignMainCPDHighlig
     }
 
     // Render highlights for CPD sites (color by photoproduct, opacity by score).
+    // Each site is wrapped in a <g class="cpd-site-group"> so CSS :hover can
+    // simultaneously highlight the T circles and reveal the ghost diamond.
     if (props.show_cpd_sites_continuously ?? false) {
       if (props.cpd_sites != null) {
         for (var cpd_site in props.cpd_sites!) {
@@ -96,7 +99,7 @@ class DesignMainCPDHighlightsComponent extends UiComponent2<DesignMainCPDHighlig
 
           String pair_key = 'cpd-${t1.stable_id}-${t2.stable_id}';
 
-          // Build junction for use in context menu closure.
+          // Build junction object for action dispatches.
           final junction = PhotoproductJunction(
             t1_stable_id: t1.stable_id,
             t2_stable_id: t2.stable_id,
@@ -130,24 +133,28 @@ class DesignMainCPDHighlightsComponent extends UiComponent2<DesignMainCPDHighlig
             visual_pos_t2 = Point<double>(t2.visual_x!, t2.visual_y!);
           }
 
+          // Collect per-site elements to wrap in a group.
+          List<ReactElement> site_els = [];
+
           // T1 circle
           if (visual_pos_t1 != null) {
-            elements.add((Dom.circle()
+            site_els.add((Dom.circle()
               ..cx = visual_pos_t1.x
               ..cy = visual_pos_t1.y
               ..r = radius
               ..fill = fill_color
               ..fillOpacity = fill_opacity
-              // Conflict indicator: red stroke ring instead of fill color change.
+              // Conflict indicator: red stroke ring.
               ..stroke = is_conflicted ? 'red' : 'none'
               ..strokeWidth = is_conflicted ? 1.5 : 0
+              ..className = 'cpd-circle'
               ..onContextMenu = on_context_menu_cpd
               ..key = 'cpd-circle-t1-$pair_key')());
           }
 
           // T2 circle
           if (visual_pos_t2 != null) {
-            elements.add((Dom.circle()
+            site_els.add((Dom.circle()
               ..cx = visual_pos_t2.x
               ..cy = visual_pos_t2.y
               ..r = radius
@@ -155,11 +162,12 @@ class DesignMainCPDHighlightsComponent extends UiComponent2<DesignMainCPDHighlig
               ..fillOpacity = fill_opacity
               ..stroke = is_conflicted ? 'red' : 'none'
               ..strokeWidth = is_conflicted ? 1.5 : 0
+              ..className = 'cpd-circle'
               ..onContextMenu = on_context_menu_cpd
               ..key = 'cpd-circle-t2-$pair_key')());
           }
 
-          // Connecting double-line if both positions are available.
+          // Connecting double-line + ghost diamond when both positions are known.
           if (visual_pos_t1 != null && visual_pos_t2 != null) {
             double dx = visual_pos_t2.x - visual_pos_t1.x;
             double dy = visual_pos_t2.y - visual_pos_t1.y;
@@ -172,7 +180,7 @@ class DesignMainCPDHighlightsComponent extends UiComponent2<DesignMainCPDHighlig
               double line_stroke_width = 1.5;
               String line_color = is_conflicted ? 'red' : fill_color;
 
-              elements.add((Dom.line()
+              site_els.add((Dom.line()
                 ..x1 = visual_pos_t1.x + perp_dx_norm * line_offset
                 ..y1 = visual_pos_t1.y + perp_dy_norm * line_offset
                 ..x2 = visual_pos_t2.x + perp_dx_norm * line_offset
@@ -182,7 +190,7 @@ class DesignMainCPDHighlightsComponent extends UiComponent2<DesignMainCPDHighlig
                 ..strokeWidth = line_stroke_width
                 ..key = '$pair_key-line1')());
 
-              elements.add((Dom.line()
+              site_els.add((Dom.line()
                 ..x1 = visual_pos_t1.x - perp_dx_norm * line_offset
                 ..y1 = visual_pos_t1.y - perp_dy_norm * line_offset
                 ..x2 = visual_pos_t2.x - perp_dx_norm * line_offset
@@ -192,7 +200,37 @@ class DesignMainCPDHighlightsComponent extends UiComponent2<DesignMainCPDHighlig
                 ..strokeWidth = line_stroke_width
                 ..key = '$pair_key-line2')());
             }
+
+            // Ghost diamond at midpoint. Invisible by default (CSS fill-opacity: 0),
+            // but pointer-events: all means hovering it (or the circles above) will
+            // trigger .cpd-site-group:hover and reveal it via CSS transition.
+            // Clicking the ghost directly marks the junction without right-clicking.
+            double mx = (visual_pos_t1.x + visual_pos_t2.x) / 2.0;
+            double my = (visual_pos_t1.y + visual_pos_t2.y) / 2.0;
+            String ghost_points =
+                '${mx},${my - half_size} '
+                '${mx + half_size},${my} '
+                '${mx},${my + half_size} '
+                '${mx - half_size},${my}';
+
+            site_els.add((Dom.polygon()
+              ..points = ghost_points
+              ..fill = fill_color
+              ..stroke = fill_color
+              ..strokeWidth = 1.2
+              ..className = 'cpd-ghost-diamond'
+              ..onClick = ((_) => app.dispatch(actions.MarkAsPhotoproductJunction(junction)))
+              ..onContextMenu = on_context_menu_cpd
+              ..title = 'Click to mark as photoproduct junction'
+              ..key = 'cpd-ghost-$pair_key')());
           }
+
+          // Wrap the site's elements in a named group for CSS :hover targeting.
+          elements.add((Dom.g()
+            ..className = 'cpd-site-group'
+            ..key = 'cpd-site-$pair_key')(
+            site_els,
+          ));
         }
       }
     }

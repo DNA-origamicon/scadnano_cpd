@@ -1159,3 +1159,36 @@ https://stackoverflow.com/questions/15138801/rotate-rectangle-around-its-own-cen
 /************************************************
 ** END Slice Bar
 ************************************************/
+
+/************************************************
+** CPD photoproduct junction hover interaction
+************************************************/
+
+/* Ghost diamond: fully transparent, but pointer-events active so hovering
+   over the midpoint area (or the T circles) triggers .cpd-site-group:hover. */
+.cpd-ghost-diamond {
+  fill-opacity: 0;
+  stroke-opacity: 0;
+  pointer-events: all;
+  cursor: pointer;
+  transition: fill-opacity 0.12s ease, stroke-opacity 0.12s ease;
+}
+
+/* On group hover, reveal the ghost diamond. */
+.cpd-site-group:hover .cpd-ghost-diamond {
+  fill-opacity: 0.45;
+  stroke-opacity: 0.75;
+}
+
+/* On group hover, boost T-base circles to full opacity for clear highlighting. */
+.cpd-circle {
+  transition: fill-opacity 0.12s ease;
+}
+
+.cpd-site-group:hover .cpd-circle {
+  fill-opacity: 1;
+}
+
+/************************************************
+** END CPD photoproduct junction hover interaction
+************************************************/
