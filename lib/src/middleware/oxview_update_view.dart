@@ -69,8 +69,8 @@ void _update_oxview_with_state(AppState state) {
     state.ui_state.loopout_rev_z_offset,
     state.ui_state.loopout_fwd_theta,
     state.ui_state.loopout_rev_theta,
-    cpd_junctions: state.design.photoproduct_junctions.toList(),
-    cpd_t_base_locations: state.ui_state.t_base_locations,
+    state.design.photoproduct_junctions.toList(),
+    state.ui_state.t_base_locations,
   );
 }
 
